@@ -65,9 +65,9 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.55 }}
           className="mt-7 max-w-2xl text-base leading-relaxed text-bone/65 sm:text-lg"
         >
-          Carlitos&apos; Baseball is a year-round training academy and travel
-          program for youth players, built on fundamentals, discipline, and a
-          real love for the game.
+          So Smooth is a year-round training academy and travel program for
+          youth players, built on fundamentals, discipline, and a real love
+          for the game.
         </motion.p>
 
         <motion.div

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -70,12 +71,19 @@ export default function Header() {
       {/* Main nav */}
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-green-500 text-ink font-display text-lg transition-transform group-hover:scale-105">
-            C
+          <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm transition-transform group-hover:scale-105 overflow-hidden">
+            <Image
+              src="/brand/logo.png"
+              alt="So Smooth logo"
+              width={44}
+              height={44}
+              className="h-full w-full object-cover"
+              priority
+            />
             <span className="absolute inset-0 rounded-full ring-2 ring-yellow-500/70 scale-110 opacity-0 group-hover:opacity-100 transition-opacity" />
           </span>
-          <span className="font-display text-xl sm:text-2xl uppercase tracking-wide text-bone">
-            Carlitos<span className="text-green-400">&apos;</span> Baseball
+          <span className="font-display text-3xl sm:text-4xl uppercase tracking-wide leading-none text-bone">
+            So Smooth
           </span>
         </Link>
 

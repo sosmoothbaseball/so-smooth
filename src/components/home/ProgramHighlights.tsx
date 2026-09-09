@@ -66,7 +66,7 @@ export default function ProgramHighlights() {
                     {row.figure}
                   </span>
                   <span className="text-xs uppercase tracking-[0.25em] text-bone/60">
-                    Carlitos&apos; Baseball
+                    So Smooth
                   </span>
                 </div>
                 <div className="absolute inset-x-0 bottom-0 h-1.5 bg-gradient-to-r from-green-400 via-yellow-400 to-green-400" />

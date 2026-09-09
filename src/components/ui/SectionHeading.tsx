@@ -1,7 +1,16 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
+
+type EyebrowImage = {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+};
 
 type SectionHeadingProps = {
   eyebrow?: string;
+  eyebrowImage?: EyebrowImage;
   title: string;
   description?: string;
   align?: "left" | "center";
@@ -11,6 +20,7 @@ type SectionHeadingProps = {
 
 export default function SectionHeading({
   eyebrow,
+  eyebrowImage,
   title,
   description,
   align = "center",
@@ -25,7 +35,19 @@ export default function SectionHeading({
         className,
       )}
     >
-      {eyebrow && (
+      {eyebrowImage && (
+        <Image
+          src={eyebrowImage.src}
+          alt={eyebrowImage.alt}
+          width={eyebrowImage.width}
+          height={eyebrowImage.height}
+          className={cn(
+            "h-auto w-40 sm:w-48",
+            dark ? "mix-blend-screen" : "mix-blend-multiply",
+          )}
+        />
+      )}
+      {!eyebrowImage && eyebrow && (
         <span
           className={cn(
             "inline-flex items-center gap-2 text-xs sm:text-sm font-semibold uppercase tracking-[0.25em]",

@@ -46,7 +46,12 @@ export default function Features() {
     <section className="relative bg-bone py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-6">
         <SectionHeading
-          eyebrow="Why Carlitos'"
+          eyebrowImage={{
+            src: "/brand/wordmark.jpg",
+            alt: "So Smooth",
+            width: 1024,
+            height: 622,
+          }}
           title="Built for Real Player Growth"
           description="Every part of our program is designed around one goal: developing better players and better people."
         />

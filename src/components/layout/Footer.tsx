@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { NAV_LINKS, SOCIAL_LINKS, CONTACT } from "@/lib/nav";
 import { InstagramIcon, FacebookIcon } from "@/components/ui/SocialIcons";
@@ -30,11 +31,17 @@ export default function Footer() {
         {/* Brand */}
         <div className="flex flex-col gap-4">
           <Link href="/" className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-green-500 text-ink font-display text-lg">
-              C
+            <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-white">
+              <Image
+                src="/brand/logo.png"
+                alt="So Smooth logo"
+                width={44}
+                height={44}
+                className="h-full w-full object-cover"
+              />
             </span>
             <span className="font-display text-xl uppercase tracking-wide">
-              Carlitos<span className="text-green-400">&apos;</span> Baseball
+              So <span className="text-green-400">Smooth</span>
             </span>
           </Link>
           <p className="text-sm leading-relaxed text-bone/60">
@@ -134,7 +141,7 @@ export default function Footer() {
 
       <div className="relative border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-6 py-6 text-xs text-bone/45 sm:flex-row">
-          <p>© {new Date().getFullYear()} Carlitos&apos; Baseball. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} So Smooth. All rights reserved.</p>
           <div className="flex items-center gap-5">
             <Link href="/waiver" className="hover:text-green-300 transition-colors">
               Waiver
