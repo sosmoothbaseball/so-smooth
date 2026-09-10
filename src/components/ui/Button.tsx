@@ -2,7 +2,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
-type ButtonVariant = "primary" | "secondary" | "outline" | "ghost";
+type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "onLight";
 type ButtonSize = "md" | "lg" | "sm";
 
 const base =
@@ -16,6 +16,8 @@ const variants: Record<ButtonVariant, string> = {
   outline:
     "border border-white/25 text-bone hover:border-green-400 hover:text-green-300 hover:bg-white/5 active:scale-[0.97]",
   ghost: "text-bone/80 hover:text-green-300",
+  onLight:
+    "border border-ink/20 text-ink hover:border-green-600 hover:text-green-700 hover:bg-green-500/5 active:scale-[0.97]",
 };
 
 const sizes: Record<ButtonSize, string> = {
@@ -33,6 +35,7 @@ type ButtonProps = {
   onClick?: () => void;
   type?: "button" | "submit";
   external?: boolean;
+  download?: string | boolean;
 };
 
 export default function Button({
@@ -44,10 +47,22 @@ export default function Button({
   onClick,
   type = "button",
   external,
+  download,
 }: ButtonProps) {
   const classes = cn(base, variants[variant], sizes[size], className);
 
   if (href) {
+    if (download) {
+      return (
+        <a
+          href={href}
+          download={download === true ? true : download}
+          className={classes}
+        >
+          {children}
+        </a>
+      );
+    }
     if (external) {
       return (
         <a

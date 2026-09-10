@@ -10,19 +10,19 @@ const ROWS = [
     eyebrow: "Beach City Prospects Style",
     title: "The Travel Team Program",
     description:
-      "Competitive select teams from 8U–14U, built on strong instruction, consistent teammates, and a genuine team-first culture. Twice-yearly tryouts, year-round tournament play.",
+      "Competitive select teams from 11U-14U, built on strong instruction, consistent teammates, and a genuine team-first culture. Twice-yearly tryouts, year-round tournament play.",
     cta: { label: "Meet the Team", href: "/team" },
-    figure: "8U–14U",
+    figure: "11U-14U",
     reverse: false,
   },
   {
     icon: Dumbbell,
     eyebrow: "Lessons · Clinics · Camps",
-    title: "Training That Builds Champions",
+    title: "Training From Youth to Professional",
     description:
-      "Private lessons, small-group clinics, and seasonal camps for every skill level, with high reps, real feedback, and coaches who care about the details.",
+      "Private lessons, small-group clinics, and seasonal camps from youth fundamentals through professional development, with high reps, real feedback, and coaches who care about the details.",
     cta: { label: "View Training", href: "/training" },
-    figure: "All Ages",
+    figure: "Youth-Pro",
     reverse: true,
   },
 ];

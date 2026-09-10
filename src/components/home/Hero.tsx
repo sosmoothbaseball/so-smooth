@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, ChevronDown, Trophy, Users2, CalendarDays } from "lucide-react";
+import { ArrowRight, ChevronDown, GraduationCap, Shield, Users2 } from "lucide-react";
 import Button from "@/components/ui/Button";
 
 const HEADLINE_LINES = [
@@ -10,9 +10,9 @@ const HEADLINE_LINES = [
 ];
 
 const STATS = [
-  { icon: CalendarDays, label: "Years Running", value: "15+" },
-  { icon: Users2, label: "Players Trained", value: "1,200+" },
-  { icon: Trophy, label: "Championships", value: "8" },
+  { icon: Users2, label: "Players Trained", value: "500+" },
+  { icon: Shield, label: "Teams Ages", value: "11U-14U" },
+  { icon: GraduationCap, label: "Training Levels", value: "Youth-Professional" },
 ];
 
 export default function Hero() {

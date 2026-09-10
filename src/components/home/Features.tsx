@@ -1,4 +1,4 @@
-import { Award, Building2, Heart, Target, Trophy, Users } from "lucide-react";
+import { GraduationCap, Heart, Shield, Target, Trophy, Users } from "lucide-react";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { StaggerGroup, StaggerItem } from "@/components/ui/Stagger";
 
@@ -16,10 +16,16 @@ const FEATURES = [
       "Programs for every age and skill level, built around steady, long-term improvement.",
   },
   {
-    icon: Building2,
-    title: "Top Tier Facility",
+    icon: Shield,
+    title: "Teams Ages 11U-14U",
     description:
-      "Indoor cages, turfed infield, and modern training tech built for serious development.",
+      "Select travel teams for 11U through 14U, with real tournament play and a team-first culture.",
+  },
+  {
+    icon: GraduationCap,
+    title: "Youth to Professional",
+    description:
+      "Training levels from youth fundamentals through professional development, matched to each player.",
   },
   {
     icon: Trophy,
@@ -32,12 +38,6 @@ const FEATURES = [
     title: "Community Rooted",
     description:
       "Scholarships, partnerships, and a culture built on loyalty and giving back.",
-  },
-  {
-    icon: Award,
-    title: "Proven Success",
-    description:
-      "A track record of champions, alumni, and players who go on to play at the next level.",
   },
 ];
 

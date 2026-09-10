@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Mail, MapPin, Phone } from "lucide-react";
-import { NAV_LINKS, SOCIAL_LINKS, CONTACT } from "@/lib/nav";
+import { NAV_LINKS, SOCIAL_LINKS, CONTACT, PORTAL_HREF } from "@/lib/nav";
 import { InstagramIcon, FacebookIcon } from "@/components/ui/SocialIcons";
 import Button from "@/components/ui/Button";
 import NewsletterForm from "@/components/layout/NewsletterForm";
@@ -76,13 +76,24 @@ export default function Footer() {
           <ul className="mt-5 flex flex-col gap-3 text-sm text-bone/65">
             {NAV_LINKS.map((link) => (
               <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="inline-flex items-center gap-2 transition-colors hover:text-green-300"
-                >
-                  <span className="h-1 w-1 rounded-full bg-green-500" />
-                  {link.label}
-                </Link>
+                {link.download ? (
+                  <a
+                    href={link.href}
+                    download={link.download === true ? true : link.download}
+                    className="inline-flex items-center gap-2 transition-colors hover:text-green-300"
+                  >
+                    <span className="h-1 w-1 rounded-full bg-green-500" />
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link
+                    href={link.href}
+                    className="inline-flex items-center gap-2 transition-colors hover:text-green-300"
+                  >
+                    <span className="h-1 w-1 rounded-full bg-green-500" />
+                    {link.label}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
@@ -95,16 +106,21 @@ export default function Footer() {
           </h3>
           <ul className="mt-5 flex flex-col gap-3 text-sm text-bone/65">
             {[
-              "Private Lessons",
-              "Group Clinics",
-              "Camps & Clinics",
-              "Travel Teams",
-              "Facility Rentals",
-              "Memberships",
+              { label: "Private Lessons", href: "/training" },
+              { label: "Group Clinics", href: "/training" },
+              { label: "Camps & Clinics", href: "/training" },
+              { label: "Travel Teams", href: "/team" },
+              { label: "Staff", href: "/staff" },
+              { label: "Shop", href: "/shop" },
             ].map((program) => (
-              <li key={program} className="inline-flex items-center gap-2">
-                <span className="h-1 w-1 rounded-full bg-yellow-500" />
-                {program}
+              <li key={program.label}>
+                <Link
+                  href={program.href}
+                  className="inline-flex items-center gap-2 transition-colors hover:text-green-300"
+                >
+                  <span className="h-1 w-1 rounded-full bg-yellow-500" />
+                  {program.label}
+                </Link>
               </li>
             ))}
           </ul>
@@ -133,7 +149,7 @@ export default function Footer() {
               </a>
             </li>
           </ul>
-          <Button href="#" variant="outline" size="sm" className="mt-6">
+          <Button href={PORTAL_HREF} variant="primary" size="sm" className="mt-6">
             Client Portal
           </Button>
         </div>
