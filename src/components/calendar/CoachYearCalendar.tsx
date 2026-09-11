@@ -67,16 +67,16 @@ export default function CoachYearCalendar({
   async function save(formData: FormData) {
     setPending(true);
     setError("");
-    const upcoming = editing && editing !== "new" && editing.source === "upcoming";
+    const event = editing && editing !== "new" ? editing : null;
     let result;
-    if (upcoming && editing !== "new") {
-      formData.set("eventId", editing.upcomingId || "");
+    if (event?.source === "upcoming") {
+      formData.set("eventId", event.upcomingId || "");
       formData.set("description", String(formData.get("notes") || ""));
-      if (!formData.get("type")) formData.set("type", editing.type || "clinic");
-      if (!formData.get("capacity")) formData.set("capacity", String(editing.capacity || 12));
-      if (!formData.get("price")) formData.set("price", editing.price || "$75");
+      if (!formData.get("type")) formData.set("type", event.type || "clinic");
+      if (!formData.get("capacity")) formData.set("capacity", String(event.capacity || 12));
+      if (!formData.get("price")) formData.set("price", event.price || "$75");
       result = await updateUpcomingEventAction(formData);
-    } else if (editing && editing !== "new") {
+    } else if (event) {
       result = await updateCalendarEventAction(formData);
     } else {
       result = await addCalendarEventAction(formData);
