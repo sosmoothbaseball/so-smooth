@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -37,20 +36,11 @@ export default function Header() {
       )}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 sm:h-[4.25rem] sm:px-6">
-        <Link href="/" className="group flex min-w-0 shrink-0 items-center gap-2">
-          <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm transition-transform group-hover:scale-105">
-            <Image
-              src="/brand/logo.png"
-              alt="So Smooth logo"
-              width={40}
-              height={40}
-              className="h-full w-full object-cover"
-              priority
-            />
-          </span>
-          <span className="font-display text-2xl uppercase leading-none tracking-wide text-bone sm:text-3xl">
-            So Smooth
-          </span>
+        <Link
+          href="/"
+          className="min-w-0 shrink-0 font-display text-2xl uppercase leading-none tracking-wide text-bone transition-colors hover:text-green-300 sm:text-3xl"
+        >
+          So Smooth
         </Link>
 
         <nav className="hidden items-center gap-4 xl:flex xl:gap-5">

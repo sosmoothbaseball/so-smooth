@@ -6,16 +6,16 @@ import CTASection from "@/components/home/CTASection";
 export const metadata: Metadata = {
   title: "Staff | So Smooth",
   description:
-    "Meet So Smooth co-founders and head coaches Carlos Vega and Roberto Bueno.",
+    "Meet the So Smooth coaching staff: Carlos Vega, Roberto Bueno, Crix Taveras, and Julio C.",
 };
 
 type Coach = {
   name: string;
-  role: string;
+  role?: string;
   initials: string;
-  goal: string;
-  experience: string[];
-  honors: string[];
+  goal?: string;
+  experience?: string[];
+  honors?: string[];
 };
 
 const COACHES: Coach[] = [
@@ -63,9 +63,19 @@ const COACHES: Coach[] = [
       "2026 USA Junior Olympics Gold Medal Champs - Head Coach (Franklin Scout Team)",
     ],
   },
+  {
+    name: "Crix Taveras",
+    initials: "CT",
+  },
+  {
+    name: "Julio C.",
+    initials: "JC",
+  },
 ];
 
 function CoachCard({ coach }: { coach: Coach }) {
+  const filled = Boolean(coach.goal || coach.experience?.length || coach.honors?.length);
+
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-3xl border border-ink/10 bg-white shadow-[0_24px_50px_-28px_rgba(7,16,12,0.35)]">
       <div className="relative bg-green-800 px-8 py-10">
@@ -78,41 +88,68 @@ function CoachCard({ coach }: { coach: Coach }) {
           <h2 className="mt-6 font-display text-4xl uppercase tracking-wide text-bone sm:text-5xl">
             {coach.name}
           </h2>
-          <p className="mt-2 text-sm uppercase tracking-[0.2em] text-yellow-400">
-            {coach.role}
+          {coach.role ? (
+            <p className="mt-2 text-sm uppercase tracking-[0.2em] text-yellow-400">
+              {coach.role}
+            </p>
+          ) : (
+            <div className="mt-3 h-2.5 w-36 rounded bg-bone/20" />
+          )}
+        </div>
+      </div>
+
+      {filled ? (
+        <div className="flex flex-1 flex-col p-7 sm:p-8">
+          {coach.goal && (
+            <p className="text-sm leading-relaxed text-ink/70">{coach.goal}</p>
+          )}
+
+          {coach.experience && coach.experience.length > 0 && (
+            <>
+              <h3 className="mt-8 font-display text-xl uppercase tracking-wide text-ink">
+                Baseball Career & Experience
+              </h3>
+              <ul className="mt-4 space-y-2.5">
+                {coach.experience.map((item) => (
+                  <li key={item} className="flex gap-3 text-sm leading-relaxed text-ink/70">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-green-600" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          {coach.honors && coach.honors.length > 0 && (
+            <div className="mt-auto pt-8">
+              <h3 className="font-display text-xl uppercase tracking-wide text-ink">
+                Awards & Honors
+              </h3>
+              <ul className="mt-4 space-y-2.5">
+                {coach.honors.map((item) => (
+                  <li key={item} className="flex gap-3 text-sm leading-relaxed text-ink/70">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-yellow-500" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-1 flex-col p-7 sm:p-8">
+          <div className="h-2.5 w-full rounded bg-ink/5" />
+          <div className="mt-2 h-2.5 w-5/6 rounded bg-ink/5" />
+          <div className="mt-2 h-2.5 w-2/3 rounded bg-ink/5" />
+          <div className="mt-8 h-4 w-1/2 rounded bg-ink/10" />
+          <div className="mt-4 h-2.5 w-full rounded bg-ink/5" />
+          <div className="mt-2 h-2.5 w-4/5 rounded bg-ink/5" />
+          <div className="mt-2 h-2.5 w-3/4 rounded bg-ink/5" />
+          <p className="mt-8 text-[11px] uppercase tracking-[0.18em] text-ink/35">
+            Bio drops in later
           </p>
         </div>
-      </div>
-
-      <div className="flex flex-1 flex-col p-7 sm:p-8">
-        <p className="text-sm leading-relaxed text-ink/70">{coach.goal}</p>
-
-        <h3 className="mt-8 font-display text-xl uppercase tracking-wide text-ink">
-          Baseball Career & Experience
-        </h3>
-        <ul className="mt-4 space-y-2.5">
-          {coach.experience.map((item) => (
-            <li key={item} className="flex gap-3 text-sm leading-relaxed text-ink/70">
-              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-green-600" />
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
-
-        <div className="mt-auto pt-8">
-          <h3 className="font-display text-xl uppercase tracking-wide text-ink">
-            Awards & Honors
-          </h3>
-          <ul className="mt-4 space-y-2.5">
-            {coach.honors.map((item) => (
-              <li key={item} className="flex gap-3 text-sm leading-relaxed text-ink/70">
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-yellow-500" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+      )}
     </article>
   );
 }
@@ -127,7 +164,7 @@ export default function StaffPage() {
             Meet The <span className="text-green-400">Staff</span>
           </>
         }
-        description="Carlos Vega and Roberto Bueno. Co-founders, head coaches, same standard."
+        description="Carlos Vega, Roberto Bueno, Crix Taveras, and Julio C. Same room, same standard."
       />
 
       <section className="bg-bone py-20 sm:py-28">

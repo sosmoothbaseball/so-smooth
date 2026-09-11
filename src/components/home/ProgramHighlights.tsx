@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 const ROWS = [
   {
     icon: Trophy,
-    eyebrow: "Beach City Prospects Style",
+    eyebrow: "So Smooth Style",
     title: "The Travel Team Program",
     description:
       "Competitive select teams from 11U-14U, built on strong instruction, consistent teammates, and a genuine team-first culture. Twice-yearly tryouts, year-round tournament play.",
