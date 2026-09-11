@@ -89,10 +89,10 @@ export default function CartDropdown({ compact = false }: { compact?: boolean })
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
             className={cn(
-              "z-50 flex max-h-[min(32rem,calc(100dvh-5.5rem))] flex-col overflow-hidden rounded-2xl border border-white/10 bg-ink shadow-[0_24px_50px_-28px_rgba(7,16,12,0.65)]",
+              "z-50 flex w-[min(22rem,calc(100vw-2rem))] max-h-[min(32rem,calc(100dvh-5.5rem))] flex-col overflow-hidden rounded-2xl border border-white/10 bg-ink shadow-[0_24px_50px_-28px_rgba(7,16,12,0.65)] origin-top-right",
               compact
-                ? "fixed inset-x-4 top-[4.75rem] origin-top"
-                : "absolute right-0 mt-3 w-[min(22rem,calc(100vw-2rem))] origin-top-right",
+                ? "fixed right-4 top-[4.75rem]"
+                : "absolute right-0 mt-3",
             )}
           >
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">

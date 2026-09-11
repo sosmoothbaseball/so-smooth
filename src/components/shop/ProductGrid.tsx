@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { Expand, ShoppingBag } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import { motion } from "framer-motion";
 import { item as staggerItem } from "@/components/ui/Stagger";
 import ProductActions from "@/components/shop/ProductActions";
@@ -40,9 +40,6 @@ function ProductCard({
         )}
         <span className="absolute left-3 top-3 rounded-full bg-bone px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-ink">
           {product.category}
-        </span>
-        <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-ink/70 text-bone backdrop-blur-sm">
-          <Expand className="h-3.5 w-3.5" />
         </span>
         <span className="absolute inset-x-3 bottom-3 rounded-full bg-ink/70 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-bone opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
           View Full Screen
