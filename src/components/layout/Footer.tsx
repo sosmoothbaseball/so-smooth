@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin } from "lucide-react";
 import { NAV_LINKS, SOCIAL_LINKS, CONTACT, PORTAL_HREF } from "@/lib/nav";
 import { InstagramIcon, FacebookIcon } from "@/components/ui/SocialIcons";
 import Button from "@/components/ui/Button";
@@ -134,13 +134,7 @@ export default function Footer() {
           <ul className="mt-5 flex flex-col gap-4 text-sm text-bone/65">
             <li className="flex items-start gap-3">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-green-400" />
-              {CONTACT.address}
-            </li>
-            <li className="flex items-start gap-3">
-              <Phone className="mt-0.5 h-4 w-4 shrink-0 text-green-400" />
-              <a href={CONTACT.phoneHref} className="hover:text-green-300 transition-colors">
-                {CONTACT.phone}
-              </a>
+              <span className="whitespace-pre-line">{CONTACT.address}</span>
             </li>
             <li className="flex items-start gap-3">
               <Mail className="mt-0.5 h-4 w-4 shrink-0 text-green-400" />

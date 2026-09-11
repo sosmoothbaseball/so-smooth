@@ -21,10 +21,8 @@ export const SOCIAL_LINKS = [
 ];
 
 export const CONTACT = {
-  phone: "(555) 010-1234",
-  phoneHref: "tel:+15550101234",
-  email: "info@sosmoothbaseball.com",
-  address: "123 Diamond Way, Baseball City, CA",
+  email: "sosmoothbaseball@gmail.com",
+  address: "1968 S. Coast Hwy\nSuite #6499\nLaguna Beach, 92651",
 };
 
 /** Set NEXT_PUBLIC_SCHEDULE_URL when the scheduling API / booking app is live. */

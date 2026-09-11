@@ -73,7 +73,22 @@ const COACHES: Coach[] = [
   },
   {
     name: "Alex Howard",
+    role: "College Coach & Pitching Coordinator",
     initials: "AH",
+    goal: "My journey in baseball has shaped the way I coach today. Having my playing career cut short by a career-ending car accident gave me a completely different perspective on baseball and life. It taught me how quickly things can change and how important it is to make the most of every opportunity.\n\nI gained valuable experience working at Beimel Athletics, a prestigious baseball training facility, where I oversaw the facility and helped manage programs for athletes of all levels, from middle school players to MLB athletes. During my time there, I gained hands-on experience utilizing advanced technology such as TrackMan and HitTrax to evaluate performance, analyze data, and help athletes better understand their development. I am excited to bring this experience, knowledge, and use of technology to the So Smooth athletes and provide them with another level of development both on and off the field.",
+    experience: [
+      "5+ years of travel baseball experience as a Coach",
+      "Private lesson, clinic, and camp experience",
+      "Played at Mary Star High School",
+      "Collegiate pitcher at Compton College",
+      "Recorded a 1.50 ERA during freshman year of college",
+      "Playing career was cut short by a career-ending car accident",
+      "Current Coach at Los Angeles Mission College",
+      "Former employee at Beimel Athletics",
+      "Experience coaching youth, travel, middle school, high school, college, and professional athletes",
+      "Experience developing players in pitching, fielding, baserunning, and overall baseball IQ",
+      "Experience working with athletes on pitching mechanics, movement, arm care, and player development",
+    ],
   },
 ];
 
@@ -105,7 +120,13 @@ function CoachCard({ coach }: { coach: Coach }) {
       {filled ? (
         <div className="flex flex-1 flex-col p-7 sm:p-8">
           {coach.goal && (
-            <p className="text-sm leading-relaxed text-ink/70">{coach.goal}</p>
+            <div className="space-y-4">
+              {coach.goal.split("\n\n").map((paragraph) => (
+                <p key={paragraph.slice(0, 48)} className="text-sm leading-relaxed text-ink/70">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
           )}
 
           {coach.experience && coach.experience.length > 0 && (
