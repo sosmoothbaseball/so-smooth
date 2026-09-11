@@ -118,14 +118,7 @@ export default function ProductGrid({ products }: { products: ShopifyProduct[] }
         </motion.div>
       )}
 
-      {opened && (
-        <ProductViewer
-          product={opened}
-          products={visible}
-          onClose={() => setOpenedId(null)}
-          onSelect={setOpenedId}
-        />
-      )}
+      {opened && <ProductViewer product={opened} onClose={() => setOpenedId(null)} />}
     </>
   );
 }

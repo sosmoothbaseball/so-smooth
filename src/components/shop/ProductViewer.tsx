@@ -11,21 +11,16 @@ import { cn } from "@/lib/utils";
 
 export default function ProductViewer({
   product,
-  products,
   onClose,
-  onSelect,
 }: {
   product: ShopifyProduct;
-  products: ShopifyProduct[];
   onClose: () => void;
-  onSelect: (id: string) => void;
 }) {
   const [mounted, setMounted] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
   const images = product.images.length ? product.images : product.image ? [product.image] : [];
   const current = images[imageIndex] ?? images[0];
-  const index = products.findIndex((item) => item.id === product.id);
-  const hasPager = products.length > 1;
+  const hasPhotos = images.length > 1;
 
   useEffect(() => setMounted(true), []);
 
@@ -44,25 +39,22 @@ export default function ProductViewer({
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
-      if (!hasPager) return;
+      if (!hasPhotos) return;
       if (event.key === "ArrowLeft") {
-        const next = products[(index - 1 + products.length) % products.length];
-        onSelect(next.id);
+        setImageIndex((value) => (value - 1 + images.length) % images.length);
       }
       if (event.key === "ArrowRight") {
-        const next = products[(index + 1) % products.length];
-        onSelect(next.id);
+        setImageIndex((value) => (value + 1) % images.length);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [hasPager, index, onClose, onSelect, products]);
+  }, [hasPhotos, images.length, onClose]);
 
   if (!mounted) return null;
 
-  const go = (direction: -1 | 1) => {
-    const next = products[(index + direction + products.length) % products.length];
-    if (next) onSelect(next.id);
+  const goPhoto = (direction: -1 | 1) => {
+    setImageIndex((value) => (value + direction + images.length) % images.length);
   };
 
   return createPortal(
@@ -107,39 +99,36 @@ export default function ProductViewer({
             )}
           </div>
 
-          {images.length > 1 && (
-            <div className="relative flex justify-center gap-2 px-4 pb-5">
-              {images.map((image, i) => (
-                <button
-                  key={image.url}
-                  type="button"
-                  aria-label={`View photo ${i + 1}`}
-                  onClick={() => setImageIndex(i)}
-                  className={cn(
-                    "relative h-14 w-14 overflow-hidden rounded-xl border transition-colors",
-                    i === imageIndex ? "border-yellow-400" : "border-white/15 hover:border-white/40",
-                  )}
-                >
-                  <Image src={image.url} alt="" fill sizes="56px" className="object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
-
-          {hasPager && (
+          {hasPhotos && (
             <>
+              <div className="relative flex justify-center gap-2 px-4 pb-5">
+                {images.map((image, i) => (
+                  <button
+                    key={image.url}
+                    type="button"
+                    aria-label={`View photo ${i + 1}`}
+                    onClick={() => setImageIndex(i)}
+                    className={cn(
+                      "relative h-14 w-14 overflow-hidden rounded-xl border transition-colors",
+                      i === imageIndex ? "border-yellow-400" : "border-white/15 hover:border-white/40",
+                    )}
+                  >
+                    <Image src={image.url} alt="" fill sizes="56px" className="object-cover" />
+                  </button>
+                ))}
+              </div>
               <button
                 type="button"
-                aria-label="Previous product"
-                onClick={() => go(-1)}
+                aria-label="Previous photo"
+                onClick={() => goPhoto(-1)}
                 className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-ink/50 text-bone backdrop-blur-sm transition-colors hover:border-green-400 hover:text-green-300"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <button
                 type="button"
-                aria-label="Next product"
-                onClick={() => go(1)}
+                aria-label="Next photo"
+                onClick={() => goPhoto(1)}
                 className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-ink/50 text-bone backdrop-blur-sm transition-colors hover:border-green-400 hover:text-green-300"
               >
                 <ChevronRight className="h-5 w-5" />
@@ -155,17 +144,9 @@ export default function ProductViewer({
           <h2 className="mt-5 font-display text-5xl uppercase leading-none tracking-wide text-ink sm:text-6xl">
             {product.title}
           </h2>
-          <p className="mt-4 max-w-md text-sm leading-relaxed text-ink/55">
-            Pick a size, add it to the bag, then finish checkout on Shopify.
-          </p>
           <div className="mt-6 max-w-sm">
             <ProductActions key={product.id} product={product} buttonSize="md" buttonVariant="primary" />
           </div>
-          {index >= 0 && (
-            <p className="mt-10 text-[11px] uppercase tracking-[0.18em] text-ink/35">
-              {index + 1} of {products.length}
-            </p>
-          )}
         </div>
       </div>
     </div>,

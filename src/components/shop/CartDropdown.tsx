@@ -15,9 +15,11 @@ export default function CartDropdown({ compact = false }: { compact?: boolean })
   const [catching, setCatching] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const ignoreCloseUntil = useRef(0);
+  const seenTick = useRef(addTick);
 
   useEffect(() => {
-    if (addTick === 0) return;
+    if (addTick === 0 || addTick === seenTick.current) return;
+    seenTick.current = addTick;
     ignoreCloseUntil.current = Date.now() + 300;
     setOpen(true);
     setCatching(true);
@@ -82,11 +84,16 @@ export default function CartDropdown({ compact = false }: { compact?: boolean })
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: -12, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.96 }}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute right-0 z-50 mt-3 w-[min(22rem,calc(100vw-2rem))] origin-top-right overflow-hidden rounded-2xl border border-white/10 bg-ink shadow-[0_24px_50px_-28px_rgba(7,16,12,0.65)]"
+            className={cn(
+              "z-50 flex max-h-[min(32rem,calc(100dvh-5.5rem))] flex-col overflow-hidden rounded-2xl border border-white/10 bg-ink shadow-[0_24px_50px_-28px_rgba(7,16,12,0.65)]",
+              compact
+                ? "fixed inset-x-4 top-[4.75rem] origin-top"
+                : "absolute right-0 mt-3 w-[min(22rem,calc(100vw-2rem))] origin-top-right",
+            )}
           >
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
               <p className="font-display text-xl uppercase tracking-wide text-bone">Cart</p>
@@ -104,7 +111,7 @@ export default function CartDropdown({ compact = false }: { compact?: boolean })
               <p className="px-4 py-8 text-sm text-bone/55">No gear in the bag yet.</p>
             ) : (
               <>
-                <ul className="max-h-80 overflow-y-auto px-4 py-3">
+                <ul className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
                   {items.map((item) => (
                     <motion.li
                       key={item.variantId}
@@ -166,7 +173,7 @@ export default function CartDropdown({ compact = false }: { compact?: boolean })
                     </motion.li>
                   ))}
                 </ul>
-                <form action={startCheckout} className="border-t border-white/10 p-4">
+                <form action={startCheckout} className="shrink-0 border-t border-white/10 p-4">
                   <input
                     type="hidden"
                     name="lines"

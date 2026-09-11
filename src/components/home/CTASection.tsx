@@ -43,9 +43,11 @@ export default function CTASection({
         <h2 className="mt-6 font-display text-4xl uppercase leading-[0.95] tracking-wide text-bone sm:text-6xl">
           {title}
         </h2>
-        <p className="mt-5 max-w-xl text-base leading-relaxed text-bone/75 sm:text-lg">
-          {description}
-        </p>
+        {description ? (
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-bone/75 sm:text-lg">
+            {description}
+          </p>
+        ) : null}
         <div className="mt-9 flex flex-col items-center gap-4 sm:flex-row">
           <Button
             href={primary.href}

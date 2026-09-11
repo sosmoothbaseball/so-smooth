@@ -9,7 +9,7 @@ import { getShopifyProducts, shopifyStoreUrl } from "@/lib/shopify";
 
 export const metadata: Metadata = {
   title: "Shop | So Smooth",
-  description: "So Smooth gear. Add to your bag here, then finish checkout on Shopify.",
+  description: "So Smooth gear.",
 };
 
 export default async function ShopPage() {
@@ -25,7 +25,6 @@ export default async function ShopPage() {
             The <span className="text-green-400">Shop</span>
           </>
         }
-        description="Add gear to your bag on this site. Checkout, shipping, and payment finish on Shopify."
         actions={
           storeUrl ? (
             <Button href={storeUrl} size="lg" external>
@@ -44,7 +43,7 @@ export default async function ShopPage() {
             title={products.length ? "The Drops" : "Shop Coming Online"}
             description={
               products.length
-                ? "Pick a size, add it to the bag, then check out when you are ready."
+                ? undefined
                 : "We could not load products yet. Confirm the Shopify store domain, then refresh."
             }
           />
@@ -71,7 +70,7 @@ export default async function ShopPage() {
             Gear Follows The <span className="text-yellow-400">Standard</span>
           </>
         }
-        description="The mini-cart lives here. The full checkout is Shopify."
+        description=""
         primary={{ href: "/training", label: "View Training" }}
         secondary={{ href: "/team", label: "See Teams" }}
       />

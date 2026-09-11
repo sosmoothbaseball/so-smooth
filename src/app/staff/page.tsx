@@ -164,7 +164,6 @@ export default function StaffPage() {
             Meet The <span className="text-green-400">Staff</span>
           </>
         }
-        description="Carlos Vega, Roberto Bueno, Crix Taveras, and Julio C. Same room, same standard."
       />
 
       <section className="bg-bone py-20 sm:py-28">
