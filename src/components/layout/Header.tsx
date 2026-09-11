@@ -5,9 +5,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
-import { NAV_LINKS, SOCIAL_LINKS, PORTAL_HREF } from "@/lib/nav";
-import { InstagramIcon, FacebookIcon } from "@/components/ui/SocialIcons";
-import Button from "@/components/ui/Button";
+import { NAV_LINKS, PORTAL_HREF } from "@/lib/nav";
+import InstagramPicker from "@/components/layout/InstagramPicker";
 import CartDropdown from "@/components/shop/CartDropdown";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +43,7 @@ export default function Header() {
           So Smooth
         </Link>
 
-        <nav className="hidden items-center gap-4 xl:flex xl:gap-5">
+        <nav className="hidden items-center gap-3 xl:flex xl:gap-3.5">
           {NAV_LINKS.filter((link) => link.href !== "/").map((link) => {
             const active = pathname === link.href;
             return (
@@ -66,31 +65,20 @@ export default function Header() {
               </Link>
             );
           })}
+          <Link
+            href={PORTAL_HREF}
+            className={cn(
+              "whitespace-nowrap rounded-full bg-green-500 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-ink shadow-[0_0_0_0_rgba(57,217,122,0)] transition-all hover:bg-green-400 hover:shadow-[0_0_20px_3px_rgba(57,217,122,0.4)]",
+              pathname.startsWith("/portal") && "bg-green-400",
+            )}
+          >
+            Client Portal
+          </Link>
         </nav>
 
         <div className="hidden shrink-0 items-center gap-3 xl:flex">
-          <div className="flex items-center gap-2">
-            {SOCIAL_LINKS.map((s) => (
-              <a
-                key={s.label}
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={s.label}
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 text-bone/80 transition-colors hover:border-green-400 hover:bg-green-400/10 hover:text-green-300"
-              >
-                {s.label === "Instagram" ? (
-                  <InstagramIcon className="h-4 w-4" />
-                ) : (
-                  <FacebookIcon className="h-4 w-4" />
-                )}
-              </a>
-            ))}
-          </div>
+          <InstagramPicker className="h-8 w-8" iconClassName="h-4 w-4" />
           <CartDropdown />
-          <Button href={PORTAL_HREF} variant="primary" size="sm">
-            Client Portal
-          </Button>
         </div>
 
         <div className="flex items-center gap-2 xl:hidden">
@@ -131,34 +119,21 @@ export default function Header() {
                   </Link>
                 </motion.div>
               ))}
-              <div className="mt-5 flex items-center gap-4">
-                {SOCIAL_LINKS.map((s) => (
-                  <a
-                    key={s.label}
-                    href={s.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={s.label}
-                    className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 text-bone/80 transition-colors hover:border-green-400 hover:text-green-300"
-                  >
-                    {s.label === "Instagram" ? (
-                      <InstagramIcon className="h-5 w-5" />
-                    ) : (
-                      <FacebookIcon className="h-5 w-5" />
-                    )}
-                  </a>
-                ))}
-              </div>
-              <div className="mt-5">
-                <Button
+              <motion.div
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: NAV_LINKS.length * 0.05 }}
+              >
+                <Link
                   href={PORTAL_HREF}
-                  variant="primary"
-                  size="md"
-                  className="w-full"
                   onClick={() => setOpen(false)}
+                  className="mt-2 block rounded-full bg-green-500 px-4 py-3 text-center text-lg font-semibold uppercase tracking-wide text-ink hover:bg-green-400"
                 >
                   Client Portal
-                </Button>
+                </Link>
+              </motion.div>
+              <div className="mt-5">
+                <InstagramPicker className="h-11 w-11" iconClassName="h-5 w-5" />
               </div>
             </nav>
           </motion.div>

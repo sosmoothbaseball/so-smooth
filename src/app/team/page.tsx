@@ -3,7 +3,6 @@ import PageHero from "@/components/ui/PageHero";
 import SectionHeading from "@/components/ui/SectionHeading";
 import CTASection from "@/components/home/CTASection";
 import TeamBoards from "@/components/team/TeamBoards";
-import { SCHEDULE_URL } from "@/lib/nav";
 
 export const metadata: Metadata = {
   title: "Team | So Smooth",
@@ -12,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 const NOTES = [
-  { title: "Tryouts", body: "Twice a year. Book a look through the scheduler." },
+  { title: "Tryouts", body: "Twice a year. Book a look on Upcoming Events when coaches post one." },
   { title: "Season", body: "Year-round training with tournament weekends." },
   { title: "Culture", body: "Same coaching language from 11U through 14U." },
 ];
@@ -35,7 +34,6 @@ export default function TeamPage() {
           <SectionHeading
             eyebrow="Age Groups"
             title="Four Teams. One Standard."
-            description="Tap an age group to see the team photo."
           />
           <div className="mt-14">
             <TeamBoards />
@@ -64,8 +62,8 @@ export default function TeamPage() {
             Want A <span className="text-yellow-400">Roster Spot?</span>
           </>
         }
-        description="Schedule a look through the same booking link we use for training."
-        primary={{ href: SCHEDULE_URL, label: "Book a Tryout", external: true }}
+        description="When coaches post a tryout, it shows on Upcoming Events. Book a player there."
+        primary={{ href: "/events", label: "Book a Tryout" }}
         secondary={{ href: "/waiver", label: "Player Waiver" }}
       />
     </>

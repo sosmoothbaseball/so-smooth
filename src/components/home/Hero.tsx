@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, ChevronDown, GraduationCap, Shield, Users2 } from "lucide-react";
 import Button from "@/components/ui/Button";
@@ -18,19 +19,17 @@ const STATS = [
 export default function Hero() {
   return (
     <section className="relative isolate overflow-hidden bg-ink pt-36 pb-28 sm:pt-44 sm:pb-36">
-      {/* background texture */}
-      <div className="bg-grid mask-fade-x absolute inset-0 opacity-60" />
-      <motion.div
-        className="absolute -top-24 -left-20 h-80 w-80 rounded-full bg-green-500/25 blur-[110px] animate-float"
-        aria-hidden
+      <Image
+        src="/brand/home-hero.jpg"
+        alt="So Smooth jerseys in the locker room"
+        fill
+        priority
+        sizes="100vw"
+        className="z-0 object-cover object-[center_35%]"
       />
-      <motion.div
-        className="absolute top-40 right-0 h-72 w-72 rounded-full bg-yellow-500/15 blur-[110px] animate-pulse-slow"
-        aria-hidden
-      />
-      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-ink to-transparent" />
+      <div className="absolute inset-0 z-0 bg-gradient-to-b from-ink/55 via-ink/40 to-ink/80" />
 
-      <div className="relative mx-auto flex max-w-7xl flex-col items-center px-6 text-center">
+      <div className="relative z-10 mx-auto flex max-w-7xl flex-col items-center px-6 text-center">
         <h1 className="font-display text-5xl uppercase leading-[0.95] tracking-wide text-bone sm:text-7xl md:text-8xl">
           {HEADLINE_LINES.map((line, li) => (
             <span key={li} className="block overflow-hidden">

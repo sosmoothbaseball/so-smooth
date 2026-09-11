@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      String   @default("parent")
+  password  String
+  authId    String?  @unique
+  createdAt DateTime @default(now())
+
+  lessonSpec      LessonSpec?
+  weeklyHours     WeeklyHours[]
+  players         Player[]
+  slots           LessonSlot[]
+  bookings        Booking[]
+  eventsCreated   UpcomingEvent[]
+  eventSignups    EventSignup[]
+  calendarEvents  CalendarEvent[]
+}
+
+model WeeklyHours {
+  id           String  @id @default(cuid())
+  coachId      String
+  coach        Profile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  weekday      Int
+  startMinutes Int
+  endMinutes   Int
+
+  @@unique([coachId, weekday])
+}
+
+model LessonSpec {
+  coachId  String  @id
+  coach    Profile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  slug     String  @unique
+  initials String
+  title    String  @default("Coach")
+  length   String  @default("60 min")
+  price    String  @default("$75")
+  location String  @default("Laguna Beach")
+}
+
+model Player {
+  id       String  @id @default(cuid())
+  parentId String
+  parent   Profile @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  name     String
+  ageGroup String
+
+  bookings Booking[]
+  signups  EventSignup[]
+}
+
+model LessonSlot {
+  id       String    @id @default(cuid())
+  coachId  String
+  coach    Profile   @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  startsAt DateTime
+  endsAt   DateTime
+  status   String    @default("open")
+  source   String    @default("weekly")
+  booking  Booking?
+
+  @@unique([coachId, startsAt])
+}
+
+model Booking {
+  id        String     @id @default(cuid())
+  slotId    String     @unique
+  slot      LessonSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  parentId  String
+  parent    Profile    @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  playerId  String
+  player    Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  status    String     @default("booked")
+  createdAt DateTime   @default(now())
+}
+
+model UpcomingEvent {
+  id          String   @id @default(cuid())
+  type        String
+  title       String
+  description String
+  location    String
+  startsAt    DateTime
+  endsAt      DateTime
+  capacity    Int
+  price       String   @default("$75")
+  createdById String
+  createdBy   Profile  @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  signups     EventSignup[]
+}
+
+model EventSignup {
+  id        String        @id @default(cuid())
+  eventId   String
+  event     UpcomingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  parentId  String
+  parent    Profile       @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  playerId  String
+  player    Player        @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  status    String        @default("booked")
+  createdAt DateTime      @default(now())
+
+  @@unique([eventId, playerId])
+}
+
+model CalendarEvent {
+  id          String   @id @default(cuid())
+  title       String
+  startsAt    DateTime
+  endsAt      DateTime
+  notes       String   @default("")
+  location    String   @default("")
+  createdById String
+  createdBy   Profile  @relation(fields: [createdById], references: [id], onDelete: Cascade)
+}

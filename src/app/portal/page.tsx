@@ -1,30 +1,35 @@
 import type { Metadata } from "next";
-import { CalendarDays, CreditCard, Users } from "lucide-react";
+import { redirect } from "next/navigation";
 import PageHero from "@/components/ui/PageHero";
-import PortalLogin from "@/components/portal/PortalLogin";
+import { TextField } from "@/components/ui/FormField";
+import Button from "@/components/ui/Button";
+import { getSession, portalHome } from "@/lib/portal/auth";
+import { loginAction } from "@/lib/portal/actions";
 
 export const metadata: Metadata = {
-  title: "Client Portal | So Smooth",
-  description: "Parent and player sign-in for schedules, payments, and roster info.",
+  title: "Portal | So Smooth",
+  description: "Sign in to book lessons, manage bookings, or run the coach calendar.",
 };
 
-const PERKS = [
-  { icon: CalendarDays, title: "Schedule", body: "Lessons, clinics, and team days in one place." },
-  { icon: CreditCard, title: "Billing", body: "Invoices and packages once accounts are live." },
-  { icon: Users, title: "Roster", body: "Player info, contacts, and waiver status." },
-];
+export default async function PortalPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const session = await getSession();
+  if (session) redirect(portalHome(session.role));
+  const { error } = await searchParams;
 
-export default function PortalPage() {
   return (
     <>
       <PageHero
-        eyebrow="Parents & Players"
+        eyebrow="Accounts"
         title={
           <>
             Client <span className="text-green-400">Portal</span>
           </>
         }
-        description="Sign-in lives here. The form is a finished example until we connect accounts."
+        description="Parents manage bookings here. Coaches run slots, camps, and the calendar."
       />
 
       <section className="bg-bone py-20 sm:py-28">
@@ -37,28 +42,58 @@ export default function PortalPage() {
               Welcome Back
             </h2>
             <p className="mt-3 mb-8 text-sm text-ink/60">
-              Use the email on your family account. Nothing is sent until we hook this up.
+              Demo tester login. Use the coach or parent account on the right.
             </p>
-            <PortalLogin />
+            <form action={loginAction} className="flex flex-col gap-5">
+              <TextField
+                id="portal-email"
+                name="email"
+                type="email"
+                label="Email"
+                autoComplete="email"
+                required
+              />
+              <TextField
+                id="portal-password"
+                name="password"
+                type="password"
+                label="Password"
+                autoComplete="current-password"
+                required
+              />
+              {error && (
+                <p className="text-sm text-red-700">That email or password did not match.</p>
+              )}
+              <Button type="submit" size="lg" className="w-full">
+                Sign In
+              </Button>
+            </form>
           </div>
 
           <div className="flex flex-col gap-5">
-            {PERKS.map(({ icon: Icon, title, body }) => (
-              <div
-                key={title}
-                className="flex gap-4 rounded-2xl border border-ink/10 bg-white p-6"
-              >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-green-700 text-bone">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <div>
-                  <h3 className="font-display text-2xl uppercase tracking-wide text-ink">
-                    {title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-ink/65">{body}</p>
-                </div>
-              </div>
-            ))}
+            <div className="rounded-2xl border border-ink/10 bg-white p-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-green-700">
+                Coach test account
+              </p>
+              <p className="mt-3 font-display text-3xl uppercase tracking-wide text-ink">
+                Carlos Vega
+              </p>
+              <p className="mt-2 text-sm text-ink/60">coach@sosmooth.test</p>
+              <p className="text-sm text-ink/60">password: coach1</p>
+            </div>
+            <div className="rounded-2xl border border-ink/10 bg-white p-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-green-700">
+                Parent test account
+              </p>
+              <p className="mt-3 font-display text-3xl uppercase tracking-wide text-ink">
+                Jordan Reyes
+              </p>
+              <p className="mt-2 text-sm text-ink/60">parent@sosmooth.test</p>
+              <p className="text-sm text-ink/60">password: parent</p>
+              <p className="mt-3 text-sm text-ink/50">
+                Players on this account: Mateo Reyes (12U) and Luca Reyes (11U).
+              </p>
+            </div>
           </div>
         </div>
       </section>

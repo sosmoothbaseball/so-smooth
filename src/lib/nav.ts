@@ -8,6 +8,9 @@ export type NavLink = {
 export const NAV_LINKS: NavLink[] = [
   { label: "Home", href: "/" },
   { label: "Training", href: "/training" },
+  { label: "Private Lessons", href: "/lessons" },
+  { label: "Upcoming Events", href: "/events" },
+  { label: "Calendar", href: "/calendar" },
   { label: "Team", href: "/team" },
   { label: "Staff", href: "/staff" },
   { label: "Shop", href: "/shop" },
@@ -15,14 +18,20 @@ export const NAV_LINKS: NavLink[] = [
   { label: "Waiver", href: "/waiver" },
 ];
 
-export const SOCIAL_LINKS = [
-  { label: "Instagram", href: "https://instagram.com" },
-  { label: "Facebook", href: "https://facebook.com" },
+export const INSTAGRAM_ACCOUNTS = [
+  {
+    handle: "@sosmooth.baseball",
+    href: "https://www.instagram.com/sosmooth.baseball",
+  },
+  {
+    handle: "@sosmooth.inf",
+    href: "https://www.instagram.com/sosmooth.inf",
+  },
 ];
 
 export const CONTACT = {
   email: "sosmoothbaseball@gmail.com",
-  address: "1968 S. Coast Hwy\nSuite #6499\nLaguna Beach, 92651",
+  address: "1968 S. Coast Hwy\nPO Box #6499\nLaguna Beach, 92651",
 };
 
 /** Set NEXT_PUBLIC_SCHEDULE_URL when the scheduling API / booking app is live. */

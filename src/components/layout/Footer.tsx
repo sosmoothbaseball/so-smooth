@@ -1,8 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Mail, MapPin } from "lucide-react";
-import { NAV_LINKS, SOCIAL_LINKS, CONTACT, PORTAL_HREF } from "@/lib/nav";
-import { InstagramIcon, FacebookIcon } from "@/components/ui/SocialIcons";
+import { NAV_LINKS, CONTACT, PORTAL_HREF } from "@/lib/nav";
+import InstagramPicker from "@/components/layout/InstagramPicker";
 import Button from "@/components/ui/Button";
 import NewsletterForm from "@/components/layout/NewsletterForm";
 
@@ -48,23 +48,8 @@ export default function Footer() {
             A year-round youth baseball program built on development, discipline,
             and team, training players to compete on the field and grow off it.
           </p>
-          <div className="flex items-center gap-3 pt-1">
-            {SOCIAL_LINKS.map((s) => (
-              <a
-                key={s.label}
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={s.label}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 text-bone/80 transition-colors hover:border-green-400 hover:text-green-300"
-              >
-                {s.label === "Instagram" ? (
-                  <InstagramIcon className="h-4.5 w-4.5" />
-                ) : (
-                  <FacebookIcon className="h-4.5 w-4.5" />
-                )}
-              </a>
-            ))}
+          <div className="pt-1">
+            <InstagramPicker className="h-10 w-10" iconClassName="h-4.5 w-4.5" />
           </div>
         </div>
 
@@ -106,9 +91,9 @@ export default function Footer() {
           </h3>
           <ul className="mt-5 flex flex-col gap-3 text-sm text-bone/65">
             {[
-              { label: "Private Lessons", href: "/training" },
-              { label: "Group Clinics", href: "/training" },
-              { label: "Camps & Clinics", href: "/training" },
+              { label: "Private Lessons", href: "/lessons" },
+              { label: "Upcoming Events", href: "/events" },
+              { label: "Camps & Clinics", href: "/events" },
               { label: "Travel Teams", href: "/team" },
               { label: "Staff", href: "/staff" },
               { label: "Shop", href: "/shop" },
