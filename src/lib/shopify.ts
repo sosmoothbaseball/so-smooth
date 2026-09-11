@@ -66,9 +66,9 @@ function absoluteUrl(url?: string | null) {
 }
 
 function categoryFromTitle(title: string, productType?: string) {
-  if (productType) return productType;
   const name = title.toLowerCase();
   if (name.includes("snapback") || name.includes("hat")) return "Hats";
+  if (productType) return productType;
   if (name.includes("youth")) return "Youth";
   if (name.includes("hoodie") || name.includes("zip")) return "Outerwear";
   return "Tops";
