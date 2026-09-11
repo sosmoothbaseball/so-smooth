@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { ShoppingBag } from "lucide-react";
+import { ChevronDown, ShoppingBag } from "lucide-react";
 import Button from "@/components/ui/Button";
-import { StaggerGroup, StaggerItem } from "@/components/ui/Stagger";
+import { motion } from "framer-motion";
+import { item as staggerItem } from "@/components/ui/Stagger";
 import { useCart } from "@/components/shop/CartProvider";
 import type { ShopifyProduct } from "@/lib/shopify";
 import { cn } from "@/lib/utils";
@@ -45,12 +46,12 @@ function ProductCard({ product }: { product: ShopifyProduct }) {
         </h3>
         <p className="mt-2 text-sm font-semibold text-green-700">{selected?.price}</p>
         {hasChoices && (
-          <label className="mt-4 block">
+          <label className="relative mt-4 block">
             <span className="sr-only">Choose a size</span>
             <select
               value={variantId}
               onChange={(event) => setVariantId(event.target.value)}
-              className="w-full rounded-full border border-ink/15 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-wide text-ink outline-none focus:border-green-600"
+              className="w-full appearance-none rounded-full border border-ink/15 bg-white py-2 pl-3.5 pr-9 text-xs font-semibold uppercase tracking-wide text-ink outline-none focus:border-green-600"
             >
               {product.variants.map((variant) => (
                 <option key={variant.id} value={variant.id} disabled={!variant.available}>
@@ -59,6 +60,10 @@ function ProductCard({ product }: { product: ShopifyProduct }) {
                 </option>
               ))}
             </select>
+            <ChevronDown
+              aria-hidden
+              className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink/55"
+            />
           </label>
         )}
         <Button
@@ -116,13 +121,28 @@ export default function ProductGrid({ products }: { products: ShopifyProduct[] }
         </div>
       )}
 
-      <StaggerGroup className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {visible.map((product) => (
-          <StaggerItem key={product.id}>
-            <ProductCard product={product} />
-          </StaggerItem>
-        ))}
-      </StaggerGroup>
+      {visible.length === 0 ? (
+        <p className="mt-10 text-sm text-ink/55">No gear in this category yet.</p>
+      ) : (
+        <motion.div
+          key={active}
+          className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: {},
+            visible: {
+              transition: { staggerChildren: 0.08, delayChildren: 0.04 },
+            },
+          }}
+        >
+          {visible.map((product) => (
+            <motion.div key={product.id} variants={staggerItem}>
+              <ProductCard product={product} />
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
     </>
   );
 }
