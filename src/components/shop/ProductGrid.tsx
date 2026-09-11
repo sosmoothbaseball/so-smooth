@@ -2,26 +2,28 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { ChevronDown, ShoppingBag } from "lucide-react";
-import Button from "@/components/ui/Button";
+import { Expand, ShoppingBag } from "lucide-react";
 import { motion } from "framer-motion";
 import { item as staggerItem } from "@/components/ui/Stagger";
-import { useCart } from "@/components/shop/CartProvider";
+import ProductActions from "@/components/shop/ProductActions";
+import ProductViewer from "@/components/shop/ProductViewer";
 import type { ShopifyProduct } from "@/lib/shopify";
 import { cn } from "@/lib/utils";
 
-function ProductCard({ product }: { product: ShopifyProduct }) {
-  const { addItem } = useCart();
-  const defaultVariant =
-    product.variants.find((variant) => variant.available) ?? product.variants[0];
-  const [variantId, setVariantId] = useState(defaultVariant?.id ?? "");
-  const selected =
-    product.variants.find((variant) => variant.id === variantId) ?? defaultVariant;
-  const hasChoices = product.variants.length > 1;
-
+function ProductCard({
+  product,
+  onOpen,
+}: {
+  product: ShopifyProduct;
+  onOpen: () => void;
+}) {
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-ink/10 bg-white">
-      <div className="relative flex aspect-square items-center justify-center bg-green-800">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="relative flex aspect-square items-center justify-center bg-green-800"
+      >
         {product.image ? (
           <Image
             src={product.image.url}
@@ -39,52 +41,22 @@ function ProductCard({ product }: { product: ShopifyProduct }) {
         <span className="absolute left-3 top-3 rounded-full bg-bone px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-ink">
           {product.category}
         </span>
-      </div>
+        <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-ink/70 text-bone backdrop-blur-sm">
+          <Expand className="h-3.5 w-3.5" />
+        </span>
+        <span className="absolute inset-x-3 bottom-3 rounded-full bg-ink/70 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-bone opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+          View Full Screen
+        </span>
+      </button>
       <div className="flex flex-1 flex-col p-5">
-        <h3 className="font-display text-2xl uppercase tracking-wide text-ink">
-          {product.title}
-        </h3>
-        <p className="mt-2 text-sm font-semibold text-green-700">{selected?.price}</p>
-        {hasChoices && (
-          <label className="relative mt-4 block">
-            <span className="sr-only">Choose a size</span>
-            <select
-              value={variantId}
-              onChange={(event) => setVariantId(event.target.value)}
-              className="w-full appearance-none rounded-full border border-ink/15 bg-white py-2 pl-3.5 pr-9 text-xs font-semibold uppercase tracking-wide text-ink outline-none focus:border-green-600"
-            >
-              {product.variants.map((variant) => (
-                <option key={variant.id} value={variant.id} disabled={!variant.available}>
-                  {variant.title || "One Size"}
-                  {variant.available ? "" : " · Sold Out"}
-                </option>
-              ))}
-            </select>
-            <ChevronDown
-              aria-hidden
-              className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink/55"
-            />
-          </label>
-        )}
-        <Button
-          type="button"
-          size="sm"
-          variant="onLight"
-          className="mt-5 w-full"
-          disabled={!selected?.available}
-          onClick={() => {
-            if (!selected) return;
-            addItem({
-              variantId: selected.id,
-              title: product.title,
-              variantTitle: selected.title,
-              image: product.image?.url,
-              price: selected.price,
-            });
-          }}
-        >
-          {selected?.available ? "Add To Cart" : "Sold Out"}
-        </Button>
+        <button type="button" onClick={onOpen} className="text-left">
+          <h3 className="font-display text-2xl uppercase tracking-wide text-ink transition-colors hover:text-green-700">
+            {product.title}
+          </h3>
+        </button>
+        <div className="mt-2">
+          <ProductActions product={product} />
+        </div>
       </div>
     </article>
   );
@@ -96,8 +68,10 @@ export default function ProductGrid({ products }: { products: ShopifyProduct[] }
     return ["All", ...unique];
   }, [products]);
   const [active, setActive] = useState("All");
+  const [openedId, setOpenedId] = useState<string | null>(null);
   const visible =
     active === "All" ? products : products.filter((product) => product.category === active);
+  const opened = visible.find((product) => product.id === openedId) ?? null;
 
   return (
     <>
@@ -138,10 +112,19 @@ export default function ProductGrid({ products }: { products: ShopifyProduct[] }
         >
           {visible.map((product) => (
             <motion.div key={product.id} variants={staggerItem}>
-              <ProductCard product={product} />
+              <ProductCard product={product} onOpen={() => setOpenedId(product.id)} />
             </motion.div>
           ))}
         </motion.div>
+      )}
+
+      {opened && (
+        <ProductViewer
+          product={opened}
+          products={visible}
+          onClose={() => setOpenedId(null)}
+          onSelect={setOpenedId}
+        />
       )}
     </>
   );

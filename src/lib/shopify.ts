@@ -8,17 +8,20 @@ export type ShopifyVariant = {
   currency: string;
 };
 
+export type ShopifyImage = {
+  url: string;
+  alt: string;
+  width: number;
+  height: number;
+};
+
 export type ShopifyProduct = {
   id: string;
   handle: string;
   title: string;
   category: string;
-  image?: {
-    url: string;
-    alt: string;
-    width: number;
-    height: number;
-  };
+  image?: ShopifyImage;
+  images: ShopifyImage[];
   variants: ShopifyVariant[];
 };
 
@@ -157,20 +160,22 @@ function mapGraphqlProduct(node: RawNode): ShopifyProduct | null {
     | { url?: string; altText?: string; width?: number; height?: number }
     | undefined;
   const title = String(node.title || "Untitled");
+  const image = imageNode?.url
+    ? {
+        url: absoluteUrl(imageNode.url),
+        alt: imageNode.altText || title,
+        width: imageNode.width || 800,
+        height: imageNode.height || 800,
+      }
+    : undefined;
 
   return {
     id: String(node.id || node.handle || title),
     handle: String(node.handle || ""),
     title,
     category: categoryFromTitle(title, String(node.productType || "")),
-    image: imageNode?.url
-      ? {
-          url: absoluteUrl(imageNode.url),
-          alt: imageNode.altText || title,
-          width: imageNode.width || 800,
-          height: imageNode.height || 800,
-        }
-      : undefined,
+    image,
+    images: image ? [image] : [],
     variants,
   };
 }
@@ -218,20 +223,21 @@ async function fetchCatalogJson() {
         })
         .filter(Boolean) as ShopifyVariant[];
       if (variants.length === 0) continue;
-      const image = product.images?.[0];
+      const images = (product.images ?? [])
+        .filter((image) => image.src)
+        .map((image) => ({
+          url: absoluteUrl(image.src),
+          alt: image.alt || title,
+          width: image.width || 800,
+          height: image.height || 800,
+        }));
       products.push({
         id: String(product.id || product.handle || title),
         handle: product.handle || "",
         title,
         category: categoryFromTitle(title, product.product_type),
-        image: image?.src
-          ? {
-              url: absoluteUrl(image.src),
-              alt: image.alt || title,
-              width: image.width || 800,
-              height: image.height || 800,
-            }
-          : undefined,
+        image: images[0],
+        images,
         variants,
       });
     }
