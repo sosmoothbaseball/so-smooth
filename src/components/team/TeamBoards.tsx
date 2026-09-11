@@ -1,30 +1,33 @@
 "use client";
 
 import { useState } from "react";
-import { UserRound } from "lucide-react";
-import { StaggerGroup, StaggerItem } from "@/components/ui/Stagger";
+import Image from "next/image";
+import { AnimatePresence, motion } from "framer-motion";
+import { Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const TEAMS: Record<string, { focus: string; note: string; slots: number }> = {
+type Team = {
+  focus: string;
+  note: string;
+  photo?: string;
+};
+
+const TEAMS: Record<string, Team> = {
   "11U": {
     focus: "Fundamentals + game IQ",
     note: "First travel year for a lot of our players.",
-    slots: 8,
   },
   "12U": {
     focus: "Reps that stick",
     note: "More innings, more positions, more accountability.",
-    slots: 8,
   },
   "13U": {
     focus: "Compete with purpose",
     note: "Tournament pace with a still-teaching staff.",
-    slots: 8,
   },
   "14U": {
     focus: "High school ready",
     note: "Sharper roles, higher standards, same culture.",
-    slots: 8,
   },
 };
 
@@ -33,7 +36,6 @@ const AGES = Object.keys(TEAMS);
 export default function TeamBoards() {
   const [age, setAge] = useState("12U");
   const team = TEAMS[age];
-  const slots = Array.from({ length: team.slots }, (_, i) => i + 1);
 
   return (
     <div>
@@ -55,44 +57,46 @@ export default function TeamBoards() {
         ))}
       </div>
 
-      <div className="mt-10 overflow-hidden rounded-3xl border border-ink/10 bg-ink">
-        <div className="grid grid-cols-1 md:grid-cols-[0.7fr_1.3fr]">
-          <div className="relative flex min-h-[200px] flex-col justify-center bg-green-800 px-8 py-10">
-            <div className="bg-grid absolute inset-0 opacity-25" />
-            <p className="relative text-[11px] font-semibold uppercase tracking-[0.22em] text-yellow-400">
-              So Smooth · Travel
-            </p>
-            <p className="relative mt-3 font-display text-7xl leading-none text-bone">{age}</p>
-          </div>
-          <div className="flex flex-col justify-center px-8 py-10">
-            <h3 className="font-display text-3xl uppercase tracking-wide text-bone sm:text-4xl">
-              {team.focus}
-            </h3>
-            <span className="mt-4 h-1 w-8 rounded-full bg-yellow-500" />
-            <p className="mt-4 max-w-md text-sm leading-relaxed text-bone/65">{team.note}</p>
-            <p className="mt-6 text-[11px] uppercase tracking-[0.18em] text-bone/40">
-              Roster spots · Names drop in later
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <StaggerGroup className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {slots.map((slot) => (
-          <StaggerItem key={`${age}-${slot}`}>
-            <div className="overflow-hidden rounded-2xl border border-ink/10 bg-white">
-              <div className="relative flex aspect-[4/5] items-center justify-center bg-green-800">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={age}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          className="relative mt-10 overflow-hidden rounded-3xl border border-ink/10 bg-ink shadow-[0_24px_50px_-28px_rgba(7,16,12,0.45)]"
+        >
+          <div className="relative aspect-[16/10] w-full sm:aspect-[2/1]">
+            {team.photo ? (
+              <Image
+                src={team.photo}
+                alt={`${age} So Smooth travel team`}
+                fill
+                sizes="(max-width: 1280px) 100vw, 1280px"
+                className="object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center bg-green-800">
                 <div className="bg-grid absolute inset-0 opacity-25" />
-                <UserRound className="relative h-12 w-12 text-bone/25" />
+                <div className="absolute -left-10 top-10 h-40 w-40 rounded-full bg-yellow-500/15 blur-3xl" />
+                <div className="absolute -bottom-10 right-10 h-48 w-48 rounded-full bg-green-400/20 blur-3xl" />
+                <Users className="relative mb-16 h-16 w-16 text-bone/30 sm:mb-12 sm:h-20 sm:w-20" />
               </div>
-              <div className="px-4 py-4">
-                <div className="h-4 w-3/4 rounded bg-ink/10" />
-                <div className="mt-2 h-2.5 w-1/2 rounded bg-ink/5" />
-              </div>
+            )}
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink via-ink/70 to-transparent px-6 py-6 sm:px-8 sm:py-8">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-yellow-400">
+                So Smooth · {age}
+              </p>
+              <h3 className="mt-2 font-display text-3xl uppercase tracking-wide text-bone sm:text-4xl">
+                {team.focus}
+              </h3>
+              <p className="mt-2 max-w-md text-sm leading-relaxed text-bone/70">
+                {team.note}
+              </p>
             </div>
-          </StaggerItem>
-        ))}
-      </StaggerGroup>
+          </div>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

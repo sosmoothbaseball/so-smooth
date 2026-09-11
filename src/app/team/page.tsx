@@ -27,7 +27,7 @@ export default function TeamPage() {
             Teams <span className="text-green-400">11U-14U</span>
           </>
         }
-        description="Select travel teams with real tournament play and a team-first culture. Switch age groups to see the open roster spots."
+        description="Select travel teams with real tournament play and a team-first culture. Switch age groups to see each team."
       />
 
       <section className="bg-bone py-20 sm:py-28">
@@ -35,7 +35,7 @@ export default function TeamPage() {
           <SectionHeading
             eyebrow="Age Groups"
             title="Four Teams. One Standard."
-            description="Tap an age group. Roster cards stay blank until we add the real players."
+            description="Tap an age group to see the team photo."
           />
           <div className="mt-14">
             <TeamBoards />

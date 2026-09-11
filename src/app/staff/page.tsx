@@ -1,25 +1,121 @@
 import type { Metadata } from "next";
-import { UserRound } from "lucide-react";
 import PageHero from "@/components/ui/PageHero";
-import SectionHeading from "@/components/ui/SectionHeading";
 import { StaggerGroup, StaggerItem } from "@/components/ui/Stagger";
 import CTASection from "@/components/home/CTASection";
 
 export const metadata: Metadata = {
   title: "Staff | So Smooth",
-  description: "Meet the So Smooth coaching staff, led by Carlos Vega.",
+  description:
+    "Meet So Smooth co-founders and head coaches Carlos Vega and Roberto Bueno.",
 };
 
-const FEATURED = {
-  name: "Carlos Vega",
-  age: 23,
-  role: "Owner & Head Coach",
-  extra: "So Smooth Baseball",
-  initials: "CV",
-  bio: "Carlos is the owner and head coach of So Smooth. At 23 he is still in the work, in the cage and on the field with the players every week.",
+type Coach = {
+  name: string;
+  role: string;
+  initials: string;
+  goal: string;
+  experience: string[];
+  honors: string[];
 };
 
-const OPEN_SLOTS = 3;
+const COACHES: Coach[] = [
+  {
+    name: "Carlos Vega",
+    role: "Co-Founder & Head Coach",
+    initials: "CV",
+    goal: "My goal is to help young athletes grow both as players and as people. Baseball is a great way to teach discipline, accountability, confidence, and the value of hard work. I want every player I work with to leave the field better than when they came in, while building the habits and mindset they need to succeed in baseball, in school, and in life. I want to instill confidence in all of my So Smooth Athletes and want them feeling trusted by me and all the coaches on the staff.",
+    experience: [
+      "5+ years of travel baseball experience as a Coach",
+      "Private lesson, clinic, and camp experience",
+      "Played at Mary Star High School",
+      "Played college baseball at Cerritos College & California Lutheran University",
+      "2025 NCAA All-Region Defensive Team Infielder",
+      "3x First Team All-League at Mary Star High School",
+      "Head Coach at Peninsula High School (Frosh)",
+      "Varsity Infield Coach at Peninsula High School (Palos Verdes, CA)",
+      "Experience developing players from youth baseball through high school",
+      "Strong high school and college coaching connections to help players find the right opportunities",
+      "Bachelor's degree in Psychology (sports emphasis)",
+      "Associates degree in Kinesiology & Exercise Science",
+    ],
+    honors: [
+      "3x First Team All-League",
+      "2025 NCAA All-Region Defensive Team",
+    ],
+  },
+  {
+    name: "Roberto Bueno",
+    role: "Co-Founder & Head Coach",
+    initials: "RB",
+    goal: "My goal is to develop more than just baseball players. I want to help young athletes become responsible, disciplined, confident, and hardworking individuals. I push every player to be the best version of themselves, both on and off the field, while preparing them for the demands of high school, college, and life.",
+    experience: [
+      "6+ years of travel baseball coaching experience",
+      "Played college baseball at Compton College & CSUSB",
+      "Coach for the 2029 Franklin Scout Team",
+      "Franklin Scout Team features 10+ future Division I players",
+      "Experience developing players from youth baseball through high school",
+      "Strong high school and college coaching connections to help players find the right opportunities",
+      "Associate's degree in Exercise Science",
+      "Bachelor's degree in Kinesiology with an emphasis in Pedagogy",
+    ],
+    honors: [
+      "2023 All-Conference Honors",
+      "2026 USA Junior Olympics Gold Medal Champs - Head Coach (Franklin Scout Team)",
+    ],
+  },
+];
+
+function CoachCard({ coach }: { coach: Coach }) {
+  return (
+    <article className="flex h-full flex-col overflow-hidden rounded-3xl border border-ink/10 bg-white shadow-[0_24px_50px_-28px_rgba(7,16,12,0.35)]">
+      <div className="relative bg-green-800 px-8 py-10">
+        <div className="bg-grid absolute inset-0 opacity-30" />
+        <div className="absolute -left-10 top-8 h-32 w-32 rounded-full bg-yellow-500/15 blur-3xl" />
+        <div className="relative flex flex-col items-center text-center">
+          <div className="flex h-28 w-28 items-center justify-center rounded-full bg-ink text-bone ring-2 ring-yellow-500">
+            <span className="font-display text-4xl">{coach.initials}</span>
+          </div>
+          <h2 className="mt-6 font-display text-4xl uppercase tracking-wide text-bone sm:text-5xl">
+            {coach.name}
+          </h2>
+          <p className="mt-2 text-sm uppercase tracking-[0.2em] text-yellow-400">
+            {coach.role}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-1 flex-col p-7 sm:p-8">
+        <p className="text-sm leading-relaxed text-ink/70">{coach.goal}</p>
+
+        <h3 className="mt-8 font-display text-xl uppercase tracking-wide text-ink">
+          Baseball Career & Experience
+        </h3>
+        <ul className="mt-4 space-y-2.5">
+          {coach.experience.map((item) => (
+            <li key={item} className="flex gap-3 text-sm leading-relaxed text-ink/70">
+              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-green-600" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-auto pt-8">
+          <h3 className="font-display text-xl uppercase tracking-wide text-ink">
+            Awards & Honors
+          </h3>
+          <ul className="mt-4 space-y-2.5">
+            {coach.honors.map((item) => (
+              <li key={item} className="flex gap-3 text-sm leading-relaxed text-ink/70">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-yellow-500" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </article>
+  );
+}
 
 export default function StaffPage() {
   return (
@@ -31,63 +127,18 @@ export default function StaffPage() {
             Meet The <span className="text-green-400">Staff</span>
           </>
         }
-        description="Carlos is locked in. The other cards stay blank until we add the rest of the room."
+        description="Carlos Vega and Roberto Bueno. Co-founders, head coaches, same standard."
       />
 
       <section className="bg-bone py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-6">
-          <div className="overflow-hidden rounded-3xl border border-ink/10 bg-ink shadow-[0_24px_50px_-28px_rgba(7,16,12,0.45)]">
-            <div className="grid grid-cols-1 lg:grid-cols-2">
-              <div className="relative flex min-h-[360px] items-center justify-center bg-green-800 p-10">
-                <div className="bg-grid absolute inset-0 opacity-30" />
-                <div className="absolute -left-10 top-10 h-40 w-40 rounded-full bg-yellow-500/15 blur-3xl" />
-                <div className="relative flex h-44 w-44 items-center justify-center rounded-full bg-ink text-bone ring-2 ring-yellow-500">
-                  <span className="font-display text-6xl">{FEATURED.initials}</span>
-                </div>
-              </div>
-              <div className="flex flex-col justify-center px-8 py-12 sm:px-12">
-                <span className="text-xs font-semibold uppercase tracking-[0.25em] text-green-300">
-                  Owner & Head Coach
-                </span>
-                <h2 className="mt-3 font-display text-5xl uppercase tracking-wide text-bone sm:text-6xl">
-                  {FEATURED.name}
-                </h2>
-                <p className="mt-3 text-sm uppercase tracking-[0.2em] text-yellow-400">
-                  {FEATURED.age} years old · {FEATURED.role}
-                </p>
-                <p className="mt-2 text-sm text-bone/55">{FEATURED.extra}</p>
-                <p className="mt-6 max-w-md text-base leading-relaxed text-bone/70">
-                  {FEATURED.bio}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-20">
-            <SectionHeading
-              eyebrow="The Room"
-              title="Coaches Beside Him"
-              description="Open spots. Names, photos, and bios drop in when the staff is set."
-            />
-            <StaggerGroup className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-3">
-              {Array.from({ length: OPEN_SLOTS }, (_, i) => (
-                <StaggerItem key={i}>
-                  <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-ink/10 bg-white">
-                    <div className="relative flex aspect-[5/4] items-center justify-center bg-green-800">
-                      <div className="bg-grid absolute inset-0 opacity-30" />
-                      <UserRound className="relative h-12 w-12 text-bone/25" />
-                    </div>
-                    <div className="flex flex-1 flex-col p-6">
-                      <div className="h-5 w-2/3 rounded bg-ink/10" />
-                      <div className="mt-3 h-2.5 w-1/3 rounded bg-ink/5" />
-                      <div className="mt-5 h-2.5 w-full rounded bg-ink/5" />
-                      <div className="mt-2 h-2.5 w-4/5 rounded bg-ink/5" />
-                    </div>
-                  </div>
-                </StaggerItem>
-              ))}
-            </StaggerGroup>
-          </div>
+          <StaggerGroup className="grid grid-cols-1 items-stretch gap-8 lg:grid-cols-2">
+            {COACHES.map((coach) => (
+              <StaggerItem key={coach.name} className="h-full">
+                <CoachCard coach={coach} />
+              </StaggerItem>
+            ))}
+          </StaggerGroup>
         </div>
       </section>
 
