@@ -3,6 +3,7 @@ import { Bebas_Neue, Inter, Kaushan_Script } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { CartProvider } from "@/components/shop/CartProvider";
 
 const bebas = Bebas_Neue({
   variable: "--font-bebas",
@@ -34,9 +35,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${bebas.variable} ${inter.variable} ${kaushan.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-bone text-ink">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <CartProvider>
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </CartProvider>
       </body>
     </html>
   );

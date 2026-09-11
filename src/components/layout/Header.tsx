@@ -8,6 +8,7 @@ import { Menu, X } from "lucide-react";
 import { NAV_LINKS, SOCIAL_LINKS, PORTAL_HREF } from "@/lib/nav";
 import { InstagramIcon, FacebookIcon } from "@/components/ui/SocialIcons";
 import Button from "@/components/ui/Button";
+import CartDropdown from "@/components/shop/CartDropdown";
 import { cn } from "@/lib/utils";
 
 export default function Header() {
@@ -86,18 +87,22 @@ export default function Header() {
               </a>
             ))}
           </div>
+          <CartDropdown />
           <Button href={PORTAL_HREF} variant="primary" size="sm">
             Client Portal
           </Button>
         </div>
 
-        <button
-          aria-label="Toggle menu"
-          onClick={() => setOpen((v) => !v)}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/15 text-bone xl:hidden"
-        >
-          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        <div className="flex items-center gap-2 xl:hidden">
+          <CartDropdown compact />
+          <button
+            aria-label="Toggle menu"
+            onClick={() => setOpen((v) => !v)}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/15 text-bone"
+          >
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>

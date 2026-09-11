@@ -34,6 +34,7 @@ type ButtonProps = {
   className?: string;
   onClick?: () => void;
   type?: "button" | "submit";
+  disabled?: boolean;
   external?: boolean;
   download?: string | boolean;
 };
@@ -46,6 +47,7 @@ export default function Button({
   className,
   onClick,
   type = "button",
+  disabled,
   external,
   download,
 }: ButtonProps) {
@@ -83,7 +85,7 @@ export default function Button({
   }
 
   return (
-    <button type={type} onClick={onClick} className={classes}>
+    <button type={type} onClick={onClick} disabled={disabled} className={classes}>
       {children}
     </button>
   );
