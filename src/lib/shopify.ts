@@ -1,21 +1,25 @@
 const API_VERSION = "2025-10";
 
+export type ShopifyVariant = {
+  id: string;
+  title?: string;
+  available: boolean;
+  price: string;
+  currency: string;
+};
+
 export type ShopifyProduct = {
   id: string;
   handle: string;
   title: string;
   category: string;
-  available: boolean;
   image?: {
     url: string;
     alt: string;
     width: number;
     height: number;
   };
-  price: string;
-  currency: string;
-  variantId: string;
-  variantTitle?: string;
+  variants: ShopifyVariant[];
 };
 
 type CartLine = {
@@ -34,11 +38,7 @@ function accessToken() {
   return (process.env.SHOPIFY_STOREFRONT_PRIVATE_TOKEN ?? "").trim();
 }
 
-function shopConfigured() {
-  return Boolean(storeHost() && accessToken());
-}
-
-function formatMoney(amount: string | number, currency: string) {
+function formatMoney(amount: string | number, currency = "USD") {
   const value = typeof amount === "number" ? amount : Number(amount);
   if (!Number.isFinite(value)) return "";
   try {
@@ -52,128 +52,24 @@ function formatMoney(amount: string | number, currency: string) {
 }
 
 function numericId(gid: string) {
-  const match = gid.match(/(\d+)\s*$/);
+  const match = String(gid).match(/(\d+)\s*$/);
   return match?.[1] ?? gid;
 }
 
-function variantIdFromUnknown(value: unknown) {
-  return typeof value === "string" ? value : "";
+function absoluteUrl(url?: string | null) {
+  if (!url) return "";
+  if (url.startsWith("//")) return `https:${url}`;
+  return url;
 }
 
-async function shopifyFetch(
-  endpoint: string,
-  headers: Record<string, string>,
-  query: string,
-  variables?: Record<string, unknown>,
-  cache: RequestCache = "force-cache",
-) {
-  const res = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      ...headers,
-    },
-    body: JSON.stringify({ query, variables }),
-    cache,
-    next: cache === "force-cache" ? { revalidate: 60 } : undefined,
-  });
-
-  const json = (await res.json().catch(() => null)) as {
-    data?: Record<string, unknown>;
-    errors?: { message?: string }[];
-  } | null;
-
-  if (!res.ok) {
-    throw new Error(`Shopify ${res.status}`);
-  }
-
-  return json;
+function categoryFromTitle(title: string, productType?: string) {
+  if (productType) return productType;
+  const name = title.toLowerCase();
+  if (name.includes("snapback") || name.includes("hat")) return "Hats";
+  if (name.includes("youth")) return "Youth";
+  if (name.includes("hoodie") || name.includes("zip")) return "Outerwear";
+  return "Tops";
 }
-
-const STOREFRONT_PRODUCTS = /* GraphQL */ `
-  query ShopProducts {
-    products(first: 50, sortKey: TITLE) {
-      nodes {
-        id
-        handle
-        title
-        productType
-        tags
-        availableForSale
-        featuredImage {
-          url
-          altText
-          width
-          height
-        }
-        priceRange {
-          minVariantPrice {
-            amount
-            currencyCode
-          }
-        }
-        variants(first: 20) {
-          nodes {
-            id
-            title
-            availableForSale
-            price {
-              amount
-              currencyCode
-            }
-            image {
-              url
-              altText
-            }
-          }
-        }
-      }
-    }
-  }
-`;
-
-const ADMIN_PRODUCTS = /* GraphQL */ `
-  query ShopProducts {
-    products(first: 50) {
-      nodes {
-        id
-        handle
-        title
-        productType
-        tags
-        featuredImage {
-          url
-          altText
-          width
-          height
-        }
-        variants(first: 20) {
-          nodes {
-            id
-            title
-            availableForSale
-            price
-          }
-        }
-      }
-    }
-  }
-`;
-
-const CART_CREATE = /* GraphQL */ `
-  mutation CartCreate($lines: [CartLineInput!]!) {
-    cartCreate(input: { lines: $lines }) {
-      cart {
-        checkoutUrl
-      }
-      userErrors {
-        field
-        message
-      }
-    }
-  }
-`;
 
 type RawNode = Record<string, unknown>;
 
@@ -208,50 +104,164 @@ function moneyFromUnknown(value: unknown): { amount: string; currency: string } 
   return null;
 }
 
-function mapProduct(node: RawNode): ShopifyProduct | null {
-  const variants = asNodes(node.variants);
-  const variant =
-    variants.find((item) => item.availableForSale !== false) ?? variants[0];
-  if (!variant) return null;
+async function shopifyFetch(
+  endpoint: string,
+  headers: Record<string, string>,
+  query: string,
+  variables?: Record<string, unknown>,
+  cache: RequestCache = "force-cache",
+) {
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...headers,
+    },
+    body: JSON.stringify({ query, variables }),
+    cache,
+    next: cache === "force-cache" ? { revalidate: 60 } : undefined,
+  });
 
-  const priceRange = node.priceRange as
-    | { minVariantPrice?: unknown }
-    | undefined;
-  const money =
-    moneyFromUnknown(variant.price) ??
-    moneyFromUnknown(priceRange?.minVariantPrice);
-  if (!money) return null;
+  const json = (await res.json().catch(() => null)) as {
+    data?: Record<string, unknown>;
+    errors?: { message?: string }[];
+  } | null;
 
-  const imageNode = (node.featuredImage || variant.image) as
+  if (!res.ok) {
+    throw new Error(`Shopify ${res.status}`);
+  }
+
+  return json;
+}
+
+function mapGraphqlProduct(node: RawNode): ShopifyProduct | null {
+  const variants = asNodes(node.variants)
+    .map((variant) => {
+      const money = moneyFromUnknown(variant.price);
+      if (!money || !variant.id) return null;
+      const title = String(variant.title || "");
+      return {
+        id: String(variant.id),
+        title: title && title !== "Default Title" ? title : undefined,
+        available: variant.availableForSale !== false,
+        price: formatMoney(money.amount, money.currency),
+        currency: money.currency,
+      } satisfies ShopifyVariant;
+    })
+    .filter(Boolean) as ShopifyVariant[];
+
+  if (variants.length === 0) return null;
+
+  const imageNode = node.featuredImage as
     | { url?: string; altText?: string; width?: number; height?: number }
     | undefined;
-  const productType = String(node.productType || "");
-  const tags = Array.isArray(node.tags) ? node.tags.map(String) : [];
-  const variantTitle = String(variant.title || "");
+  const title = String(node.title || "Untitled");
 
   return {
-    id: String(node.id || ""),
+    id: String(node.id || node.handle || title),
     handle: String(node.handle || ""),
-    title: String(node.title || "Untitled"),
-    category: productType || tags[0] || "Gear",
-    available: Boolean(
-      node.availableForSale !== false && variant.availableForSale !== false,
-    ),
+    title,
+    category: categoryFromTitle(title, String(node.productType || "")),
     image: imageNode?.url
       ? {
-          url: imageNode.url,
-          alt: imageNode.altText || String(node.title || "Product"),
+          url: absoluteUrl(imageNode.url),
+          alt: imageNode.altText || title,
           width: imageNode.width || 800,
           height: imageNode.height || 800,
         }
       : undefined,
-    price: formatMoney(money.amount, money.currency),
-    currency: money.currency,
-    variantId: variantIdFromUnknown(variant.id),
-    variantTitle:
-      variantTitle && variantTitle !== "Default Title" ? variantTitle : undefined,
+    variants,
   };
 }
+
+async function fetchCatalogJson() {
+  const host = storeHost();
+  if (!host) return [];
+
+  const products: ShopifyProduct[] = [];
+  for (let page = 1; page <= 10; page += 1) {
+    const res = await fetch(`https://${host}/products.json?limit=250&page=${page}`, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) break;
+    const json = (await res.json()) as {
+      products?: {
+        id?: number | string;
+        title?: string;
+        handle?: string;
+        product_type?: string;
+        images?: { src?: string; width?: number; height?: number; alt?: string }[];
+        variants?: {
+          id?: number | string;
+          title?: string;
+          available?: boolean;
+          price?: string;
+        }[];
+      }[];
+    };
+    const batch = json.products ?? [];
+    for (const product of batch) {
+      const title = product.title || "Untitled";
+      const variants = (product.variants ?? [])
+        .map((variant) => {
+          if (variant.id == null || variant.price == null) return null;
+          const variantTitle = String(variant.title || "");
+          return {
+            id: String(variant.id),
+            title: variantTitle && variantTitle !== "Default Title" ? variantTitle : undefined,
+            available: variant.available !== false,
+            price: formatMoney(variant.price),
+            currency: "USD",
+          } satisfies ShopifyVariant;
+        })
+        .filter(Boolean) as ShopifyVariant[];
+      if (variants.length === 0) continue;
+      const image = product.images?.[0];
+      products.push({
+        id: String(product.id || product.handle || title),
+        handle: product.handle || "",
+        title,
+        category: categoryFromTitle(title, product.product_type),
+        image: image?.src
+          ? {
+              url: absoluteUrl(image.src),
+              alt: image.alt || title,
+              width: image.width || 800,
+              height: image.height || 800,
+            }
+          : undefined,
+        variants,
+      });
+    }
+    if (batch.length < 250) break;
+  }
+
+  return products;
+}
+
+const STOREFRONT_PRODUCTS = /* GraphQL */ `
+  query ShopProducts {
+    products(first: 50, sortKey: TITLE) {
+      nodes {
+        id
+        handle
+        title
+        productType
+        featuredImage { url altText width height }
+        variants(first: 50) {
+          nodes {
+            id
+            title
+            availableForSale
+            price { amount currencyCode }
+          }
+        }
+      }
+    }
+  }
+`;
 
 async function fetchStorefrontProducts() {
   const json = await shopifyFetch(
@@ -262,32 +272,23 @@ async function fetchStorefrontProducts() {
     },
     STOREFRONT_PRODUCTS,
   );
-  const products = json?.data?.products;
-  return asNodes(products).map(mapProduct).filter(Boolean) as ShopifyProduct[];
-}
-
-async function fetchAdminProducts() {
-  const json = await shopifyFetch(
-    `https://${storeHost()}/admin/api/${API_VERSION}/graphql.json`,
-    { "X-Shopify-Access-Token": accessToken() },
-    ADMIN_PRODUCTS,
-  );
-  const products = json?.data?.products;
-  return asNodes(products).map(mapProduct).filter(Boolean) as ShopifyProduct[];
+  return asNodes(json?.data?.products).map(mapGraphqlProduct).filter(Boolean) as ShopifyProduct[];
 }
 
 export async function getShopifyProducts(): Promise<ShopifyProduct[]> {
-  if (!shopConfigured()) return [];
+  if (!storeHost()) return [];
 
   try {
-    const products = await fetchStorefrontProducts();
-    if (products.length > 0) return products;
+    const catalog = await fetchCatalogJson();
+    if (catalog.length > 0) return catalog;
   } catch {
-    // Fall through to Admin if this token is an admin token.
+    // Fall through to Storefront GraphQL if the public catalog is blocked.
   }
 
+  if (!accessToken()) return [];
+
   try {
-    return await fetchAdminProducts();
+    return await fetchStorefrontProducts();
   } catch {
     return [];
   }
@@ -302,45 +303,10 @@ function cartPermalink(lines: CartLine[]) {
 }
 
 export async function createShopifyCheckout(lines: CartLine[]) {
-  const usable = lines.filter(
-    (line) =>
-      line.quantity > 0 &&
-      (line.variantId.startsWith("gid://shopify/ProductVariant/") ||
-        /^\d+$/.test(line.variantId)),
-  );
+  const usable = lines.filter((line) => line.quantity > 0 && line.variantId);
   if (usable.length === 0) {
     throw new Error("Cart is empty.");
   }
-
-  try {
-    const json = await shopifyFetch(
-      `https://${storeHost()}/api/${API_VERSION}/graphql.json`,
-      {
-        "Shopify-Storefront-Private-Token": accessToken(),
-        "X-Shopify-Storefront-Access-Token": accessToken(),
-      },
-      CART_CREATE,
-      {
-        lines: usable.map((line) => ({
-          merchandiseId: line.variantId.startsWith("gid://")
-            ? line.variantId
-            : `gid://shopify/ProductVariant/${line.variantId}`,
-          quantity: line.quantity,
-        })),
-      },
-      "no-store",
-    );
-    const payload = json?.data?.cartCreate as
-      | {
-          cart?: { checkoutUrl?: string };
-          userErrors?: { message?: string }[];
-        }
-      | undefined;
-    if (payload?.cart?.checkoutUrl) return payload.cart.checkoutUrl;
-  } catch {
-    // Permalink still lands on Shopify checkout.
-  }
-
   return cartPermalink(usable);
 }
 

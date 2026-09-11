@@ -44,8 +44,8 @@ export default async function ShopPage() {
             title={products.length ? "The Drops" : "Shop Coming Online"}
             description={
               products.length
-                ? "Tap a piece, add it to the bag, then check out when you are ready."
-                : "We could not load products yet. Confirm the Shopify domain and Storefront token, then refresh."
+                ? "Pick a size, add it to the bag, then check out when you are ready."
+                : "We could not load products yet. Confirm the Shopify store domain, then refresh."
             }
           />
 
