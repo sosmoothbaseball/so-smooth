@@ -13,6 +13,7 @@ export default function CartDropdown({ compact = false }: { compact?: boolean })
   const { items, count, lastAddedId, addTick, setQuantity, removeItem } = useCart();
   const [open, setOpen] = useState(false);
   const [catching, setCatching] = useState(false);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const ignoreCloseUntil = useRef(0);
   const seenTick = useRef(addTick);
@@ -21,9 +22,14 @@ export default function CartDropdown({ compact = false }: { compact?: boolean })
     if (addTick === 0 || addTick === seenTick.current) return;
     seenTick.current = addTick;
     ignoreCloseUntil.current = Date.now() + 300;
+    setHighlightId(lastAddedId);
     setOpen(true);
     setCatching(true);
-  }, [addTick]);
+  }, [addTick, lastAddedId]);
+
+  useEffect(() => {
+    if (!open) setHighlightId(null);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -120,12 +126,12 @@ export default function CartDropdown({ compact = false }: { compact?: boolean })
                       animate={{
                         opacity: 1,
                         y: 0,
-                        scale: lastAddedId === item.variantId ? [0.96, 1.03, 1] : 1,
+                        scale: highlightId === item.variantId ? [0.96, 1.03, 1] : 1,
                       }}
                       transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
                       className={cn(
                         "flex gap-3 rounded-xl border-b border-white/5 px-1 py-3 last:border-b-0",
-                        lastAddedId === item.variantId && "bg-green-400/10",
+                        highlightId === item.variantId && "bg-green-400/10",
                       )}
                     >
                       <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-green-800">

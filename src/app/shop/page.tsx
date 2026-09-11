@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import { ArrowUpRight, ShoppingBag } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import PageHero from "@/components/ui/PageHero";
-import Button from "@/components/ui/Button";
 import SectionHeading from "@/components/ui/SectionHeading";
 import CTASection from "@/components/home/CTASection";
 import ProductGrid from "@/components/shop/ProductGrid";
-import { getShopifyProducts, shopifyStoreUrl } from "@/lib/shopify";
+import { getShopifyProducts } from "@/lib/shopify";
 
 export const metadata: Metadata = {
   title: "Shop | So Smooth",
@@ -14,7 +13,6 @@ export const metadata: Metadata = {
 
 export default async function ShopPage() {
   const products = await getShopifyProducts();
-  const storeUrl = shopifyStoreUrl();
 
   return (
     <>
@@ -24,14 +22,6 @@ export default async function ShopPage() {
           <>
             The <span className="text-green-400">Shop</span>
           </>
-        }
-        actions={
-          storeUrl ? (
-            <Button href={storeUrl} size="lg" external>
-              Open Shopify Store
-              <ArrowUpRight className="h-4 w-4" />
-            </Button>
-          ) : undefined
         }
       />
 
