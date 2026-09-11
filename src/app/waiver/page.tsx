@@ -13,7 +13,6 @@ export const metadata: Metadata = {
 
 const CHECKLIST = [
   "Parent or guardian signs for players under 18",
-  "Bring a signed copy to the first session or tryout",
   "One waiver covers the current season",
   "Ask staff if you need a paper copy at the field",
 ];
