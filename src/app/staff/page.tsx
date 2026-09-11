@@ -6,7 +6,7 @@ import CTASection from "@/components/home/CTASection";
 export const metadata: Metadata = {
   title: "Staff | So Smooth",
   description:
-    "Meet the So Smooth coaching staff: Carlos Vega, Roberto Bueno, Crix Taveras, and Julio C.",
+    "Meet the So Smooth coaching staff: Carlos Vega, Roberto Bueno, Crix Taveras, Julio C., and Ryan Howard.",
 };
 
 type Coach = {
@@ -70,6 +70,10 @@ const COACHES: Coach[] = [
   {
     name: "Julio C.",
     initials: "JC",
+  },
+  {
+    name: "Ryan Howard",
+    initials: "RH",
   },
 ];
 
