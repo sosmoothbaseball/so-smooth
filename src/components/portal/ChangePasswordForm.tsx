@@ -1,13 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import ActionForm from "@/components/portal/ActionForm";
 import Button from "@/components/ui/Button";
 import { TextField } from "@/components/ui/FormField";
+import PasswordRules from "@/components/portal/PasswordRules";
 import { changePasswordAction } from "@/lib/portal/actions";
 
 export default function ChangePasswordForm({ backHref }: { backHref: string }) {
   const router = useRouter();
+  const [newPassword, setNewPassword] = useState("");
 
   return (
     <ActionForm
@@ -23,14 +26,21 @@ export default function ChangePasswordForm({ backHref }: { backHref: string }) {
         autoComplete="current-password"
         required
       />
-      <TextField
-        id="newPassword"
-        name="newPassword"
-        type="password"
-        label="New Password"
-        autoComplete="new-password"
-        required
-      />
+      <div>
+        <TextField
+          id="newPassword"
+          name="newPassword"
+          type="password"
+          label="New Password"
+          autoComplete="new-password"
+          required
+          value={newPassword}
+          onChange={(event) => setNewPassword(event.target.value)}
+        />
+        <div className="mt-3">
+          <PasswordRules value={newPassword} />
+        </div>
+      </div>
       <TextField
         id="confirmPassword"
         name="confirmPassword"

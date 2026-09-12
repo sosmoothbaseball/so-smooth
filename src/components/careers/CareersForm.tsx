@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import Button from "@/components/ui/Button";
+import Spinner from "@/components/ui/Spinner";
 import {
   FileField,
   SelectField,
@@ -12,13 +13,19 @@ import {
 
 export default function CareersForm() {
   const [sent, setSent] = useState(false);
+  const [pending, setPending] = useState(false);
 
   return (
     <form
       className="flex flex-col gap-5"
       onSubmit={(e) => {
         e.preventDefault();
-        setSent(true);
+        if (pending || sent) return;
+        setPending(true);
+        window.setTimeout(() => {
+          setPending(false);
+          setSent(true);
+        }, 700);
       }}
     >
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -93,9 +100,22 @@ export default function CareersForm() {
       />
 
       <div className="flex justify-end">
-        <Button type="submit" size="lg">
-          {sent ? "Received" : "Submit"}
-          <ArrowRight className="h-4 w-4" />
+        <Button type="submit" size="lg" pending={pending} disabled={sent}>
+          {pending ? (
+            <>
+              <Spinner className="h-4 w-4" /> Sending
+            </>
+          ) : sent ? (
+            <>
+              Received
+              <ArrowRight className="h-4 w-4" />
+            </>
+          ) : (
+            <>
+              Submit
+              <ArrowRight className="h-4 w-4" />
+            </>
+          )}
         </Button>
       </div>
       {sent && (

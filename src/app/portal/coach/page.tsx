@@ -6,14 +6,13 @@ import {
   removeLessonSlotAction,
 } from "@/lib/portal/actions";
 import { getWeeklyHours } from "@/lib/portal/availability";
-import { formatRange, toDateTimeLocal } from "@/lib/portal/dates";
+import { formatRange } from "@/lib/portal/dates";
 import { dayKey, formatSlotDay, weekDays } from "@/lib/lessons";
 import PortalShell from "@/components/portal/PortalShell";
 import PortalPanel from "@/components/portal/PortalPanel";
 import WeeklyHoursForm from "@/components/portal/WeeklyHoursForm";
 import Button from "@/components/ui/Button";
 import ActionForm from "@/components/portal/ActionForm";
-import OneTimeSlotForm from "@/components/portal/OneTimeSlotForm";
 
 export default async function CoachSchedulePage() {
   const user = await requireCoach();
@@ -35,11 +34,6 @@ export default async function CoachSchedulePage() {
         bookedSlots: daySlots.filter((slot) => slot.status === "booked"),
       };
     });
-  const start = new Date();
-  start.setDate(start.getDate() + 1);
-  start.setHours(16, 0, 0, 0);
-  const end = new Date(start);
-  end.setHours(17, 0, 0, 0);
 
   return (
     <PortalShell user={user} pathname="/portal/coach">
@@ -126,19 +120,6 @@ export default async function CoachSchedulePage() {
               );
             })}
           </ul>
-        </PortalPanel>
-      </div>
-
-      <div className="mt-6">
-        <PortalPanel
-          title="One-time slot"
-          description="Use this only for an extra time that is not already on your usual schedule."
-        >
-          <OneTimeSlotForm
-            defaultStart={toDateTimeLocal(start)}
-            defaultEnd={toDateTimeLocal(end)}
-            minDate={toDateTimeLocal(new Date())}
-          />
         </PortalPanel>
       </div>
 

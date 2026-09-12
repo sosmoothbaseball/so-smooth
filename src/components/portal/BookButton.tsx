@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { checkEventSpotAction, type ActionResult } from "@/lib/portal/actions";
 import Button from "@/components/ui/Button";
+import Spinner from "@/components/ui/Spinner";
 import BookingConfirmed from "@/components/portal/BookingConfirmed";
 
 export type BookableSession = {
@@ -91,8 +92,14 @@ export default function BookButton({
           </option>
         ))}
       </select>
-      <Button type="submit" size="sm" disabled={pending}>
-        {pending ? "Booking…" : "Book"}
+      <Button type="submit" size="sm" pending={pending}>
+        {pending ? (
+          <>
+            <Spinner className="h-3.5 w-3.5" /> Booking
+          </>
+        ) : (
+          "Book"
+        )}
       </Button>
       {error ? <p className="text-xs text-red-700">{error}</p> : null}
     </form>

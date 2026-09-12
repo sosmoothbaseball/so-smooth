@@ -23,6 +23,7 @@ import {
   readEventState,
   readLessonSlotState,
 } from "@/lib/portal/booking";
+import { passwordMeetsRules, PASSWORD_RULES_MESSAGE } from "@/lib/portal/password";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -64,7 +65,7 @@ function refreshProfiles() {
 }
 
 
-export async function loginAction(formData: FormData) {
+export async function loginAction(formData: FormData): Promise<ActionResult> {
   const email = String(formData.get("email") || "")
     .trim()
     .toLowerCase();
@@ -72,15 +73,86 @@ export async function loginAction(formData: FormData) {
   const supabase = await createSupabaseServer();
   if (supabase) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error || !data.user) redirect("/portal?error=1");
+    if (error || !data.user) return fail("Incorrect password");
     const profile = await linkAuthUser(data.user);
-    if (!profile) redirect("/portal?error=1");
+    if (!profile) return fail("Incorrect password");
     redirect(portalHome(profile.role));
   }
-  const user = await prisma.profile.findUnique({ where: { email } });
-  if (!user || !user.password || user.password !== password) {
-    redirect("/portal?error=1");
+  let user;
+  try {
+    user = await prisma.profile.findUnique({ where: { email } });
+  } catch {
+    return fail("Incorrect password");
   }
+  if (!user || !user.password || user.password !== password) {
+    return fail("Incorrect password");
+  }
+  await setSession(user.id);
+  redirect(portalHome(user.role));
+}
+
+export async function signupAction(formData: FormData): Promise<ActionResult> {
+  const name = String(formData.get("name") || "").trim();
+  const email = String(formData.get("email") || "")
+    .trim()
+    .toLowerCase();
+  const phone = String(formData.get("phone") || "").trim();
+  const password = String(formData.get("password") || "");
+
+  if (!name || !email || !password) {
+    return fail("Name, email, and password are required.");
+  }
+  if (!passwordMeetsRules(password)) {
+    return fail(PASSWORD_RULES_MESSAGE);
+  }
+
+  let existing;
+  try {
+    existing = await prisma.profile.findUnique({ where: { email } });
+  } catch {
+    return fail("Could not create the account right now. Try again.");
+  }
+  if (existing) {
+    return fail("That email already has an account. Sign in instead.");
+  }
+
+  const supabase = await createSupabaseServer();
+  if (supabase) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name, phone } },
+    });
+    if (error) return fail(error.message);
+    if (!data.user) {
+      return fail("Check your email to confirm the account, then sign in.");
+    }
+    await prisma.profile.create({
+      data: {
+        name,
+        email,
+        password: "",
+        authId: data.user.id,
+        role: "parent",
+      },
+    });
+    if (!data.session) {
+      const signedIn = await supabase.auth.signInWithPassword({ email, password });
+      if (signedIn.error) {
+        return fail("Account created. Confirm the email, then sign in.");
+      }
+    }
+    redirect(portalHome("parent"));
+  }
+
+  const user = await prisma.profile.create({
+    data: {
+      name,
+      email,
+      password,
+      role: "parent",
+    },
+  });
   await setSession(user.id);
   redirect(portalHome(user.role));
 }
@@ -111,43 +183,6 @@ export async function saveWeeklyHoursAction(formData: FormData): Promise<ActionR
 
   await replaceWeeklyHours(coach.id, rules);
   await syncCoachLessonSlots(coach.id, { replaceOpen: true });
-  refreshLessons();
-  return ok();
-}
-
-export async function addLessonSlotAction(formData: FormData): Promise<ActionResult> {
-  const coach = await requireCoach();
-  const startsAt = parseDate(formData.get("startsAt"));
-  const endsAt = parseDate(formData.get("endsAt"));
-  if (!startsAt || !endsAt) return fail("Enter a start and end time.");
-  if (endsAt <= startsAt) return fail("End time must be after the start.");
-  if (startsAt <= now()) return fail("That time already passed. Add a future slot.");
-
-  const clash = await prisma.lessonSlot.findFirst({
-    where: {
-      coachId: coach.id,
-      status: { in: ["open", "booked", "blocked"] },
-      startsAt: { lt: endsAt },
-      endsAt: { gt: startsAt },
-    },
-    include: { booking: { select: { status: true } } },
-  });
-  if (clash) {
-    if (clash.status === "booked" || clash.booking?.status === "booked") {
-      return fail("That time is already booked. Cancel the lesson first if you need to change it.");
-    }
-    return fail("You already have a slot at that time.");
-  }
-
-  try {
-    await prisma.lessonSlot.create({
-      data: { coachId: coach.id, startsAt, endsAt, status: "open", source: "once" },
-    });
-  } catch (error) {
-    const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
-    if (code === "P2002") return fail("You already have a slot at that time.");
-    throw error;
-  }
   refreshLessons();
   return ok();
 }
@@ -240,10 +275,10 @@ export async function loginForBookingAction(formData: FormData) {
   if (supabase) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error || !data.user) {
-      return { ok: false, error: "That email or password did not match." };
+      return { ok: false, error: "Incorrect password" };
     }
     const profile = await linkAuthUser(data.user);
-    if (!profile) return { ok: false, error: "That email or password did not match." };
+    if (!profile) return { ok: false, error: "Incorrect password" };
     if (profile.role === "coach") redirect("/portal/coach");
     redirect(slotId ? `/lessons?book=${slotId}` : "/lessons");
   }
@@ -252,7 +287,7 @@ export async function loginForBookingAction(formData: FormData) {
     include: { players: true },
   });
   if (!user || !user.password || user.password !== password) {
-    return { ok: false, error: "That email or password did not match." };
+    return { ok: false, error: "Incorrect password" };
   }
   await setSession(user.id);
   if (user.role === "coach") {
@@ -273,6 +308,9 @@ export async function createParentForBookingAction(formData: FormData) {
 
   if (!name || !email || !password) {
     return { ok: false, error: "Name, email, and password are required." };
+  }
+  if (!passwordMeetsRules(password)) {
+    return { ok: false, error: PASSWORD_RULES_MESSAGE };
   }
   if (!playerName) {
     return { ok: false, error: "Add the player this lesson is for." };
@@ -673,7 +711,7 @@ export async function changePasswordAction(formData: FormData): Promise<ActionRe
     return fail("Enter your current password and the new one twice.");
   }
   if (newPassword !== confirmPassword) return fail("The new passwords do not match.");
-  if (newPassword.length < 6) return fail("Use at least 6 characters for the new password.");
+  if (!passwordMeetsRules(newPassword)) return fail(PASSWORD_RULES_MESSAGE);
   if (newPassword === currentPassword) return fail("Pick a new password that is different.");
 
   const supabase = await createSupabaseServer();

@@ -29,12 +29,18 @@ function FieldShell({ label, htmlFor, children }: FieldShellProps) {
 type TextFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   id: string;
+  invalid?: boolean;
 };
 
-export function TextField({ label, id, className, ...props }: TextFieldProps) {
+export function TextField({ label, id, className, invalid, ...props }: TextFieldProps) {
   return (
     <FieldShell label={label} htmlFor={id}>
-      <input id={id} className={cn(fieldClass, className)} {...props} />
+      <input
+        id={id}
+        aria-invalid={invalid || undefined}
+        className={cn(fieldClass, invalid && "border-red-500 focus:border-red-500", className)}
+        {...props}
+      />
     </FieldShell>
   );
 }

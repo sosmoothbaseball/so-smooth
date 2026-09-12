@@ -23,12 +23,9 @@ export default function CareersPage() {
       <section className="bg-bone py-20 sm:py-28">
         <div className="mx-auto max-w-3xl px-6">
           <div className="rounded-3xl border border-ink/10 bg-white p-6 shadow-sm sm:p-10">
-            <h2 className="font-display text-4xl uppercase tracking-wide text-ink">
+            <h2 className="mb-8 font-display text-4xl uppercase tracking-wide text-ink">
               Get In Touch
             </h2>
-            <p className="mt-3 mb-8 text-sm text-ink/60">
-              Fill this out and hit submit. We will hook it to email later.
-            </p>
             <CareersForm />
           </div>
         </div>

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import type { LessonCoachCard, PublicSlot } from "@/lib/lessons";
 import { dayKey, formatSlotDay, formatSlotTime, weekDays } from "@/lib/lessons";
@@ -13,8 +14,11 @@ import {
   loginForBookingAction,
 } from "@/lib/portal/actions";
 import Button from "@/components/ui/Button";
+import Spinner from "@/components/ui/Spinner";
 import { TextField } from "@/components/ui/FormField";
 import BookingConfirmed from "@/components/portal/BookingConfirmed";
+import PasswordRules from "@/components/portal/PasswordRules";
+import { passwordMeetsRules, PASSWORD_RULES_MESSAGE } from "@/lib/portal/password";
 import { cn } from "@/lib/utils";
 
 type Player = { id: string; name: string; ageGroup: string };
@@ -58,6 +62,8 @@ export default function CoachLessonCard({
   const [activeSlot, setActiveSlot] = useState<PublicSlot | null>(null);
   const [mode, setMode] = useState<"login" | "create">("login");
   const [error, setError] = useState("");
+  const [shakeKey, setShakeKey] = useState(0);
+  const [newPassword, setNewPassword] = useState("");
   const [pending, setPending] = useState(false);
   const [confirmed, setConfirmed] = useState<{ title: string; detail: string } | null>(null);
 
@@ -138,15 +144,26 @@ export default function CoachLessonCard({
     setError("");
     const result = await loginForBookingAction(formData);
     setPending(false);
-    if (result?.error) setError(result.error);
+    if (result?.error) {
+      setError(result.error);
+      setShakeKey((key) => key + 1);
+    }
   }
 
   async function createAccount(formData: FormData) {
+    if (!passwordMeetsRules(String(formData.get("password") || ""))) {
+      setError(PASSWORD_RULES_MESSAGE);
+      setShakeKey((key) => key + 1);
+      return;
+    }
     setPending(true);
     setError("");
     const result = await createParentForBookingAction(formData);
     setPending(false);
-    if (result?.error) setError(result.error);
+    if (result?.error) {
+      setError(result.error);
+      setShakeKey((key) => key + 1);
+    }
   }
 
   return (
@@ -327,7 +344,11 @@ export default function CoachLessonCard({
                     </button>
                     <button
                       type="button"
-                      onClick={() => setMode("create")}
+                      onClick={() => {
+                        setMode("create");
+                        setError("");
+                        setNewPassword("");
+                      }}
                       className={cn(
                         "rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide",
                         mode === "create" ? "bg-green-700 text-bone" : "bg-bone text-ink/60",
@@ -352,10 +373,27 @@ export default function CoachLessonCard({
                         type="password"
                         label="Password"
                         required
+                        invalid={Boolean(error)}
                       />
-                      {error && <p className="text-sm text-red-700">{error}</p>}
-                      <Button type="submit" disabled={pending}>
-                        {pending ? "Signing In…" : "Sign In And Continue"}
+                      {error && (
+                        <motion.p
+                          key={shakeKey}
+                          initial={{ x: 0 }}
+                          animate={{ x: [0, -10, 10, -7, 7, -3, 3, 0] }}
+                          transition={{ duration: 0.45 }}
+                          className="text-sm font-medium text-red-700"
+                        >
+                          {error}
+                        </motion.p>
+                      )}
+                      <Button type="submit" pending={pending}>
+                        {pending ? (
+                          <>
+                            <Spinner className="h-4 w-4" /> Signing In
+                          </>
+                        ) : (
+                          "Sign In And Continue"
+                        )}
                       </Button>
                     </form>
                   ) : (
@@ -369,13 +407,21 @@ export default function CoachLessonCard({
                       <input type="hidden" name="slotId" value={activeSlot.id} />
                       <TextField id={`${coach.slug}-name`} name="name" label="Your Name" required />
                       <TextField id={`${coach.slug}-new-email`} name="email" type="email" label="Email" required />
-                      <TextField
-                        id={`${coach.slug}-new-password`}
-                        name="password"
-                        type="password"
-                        label="Password"
-                        required
-                      />
+                      <div>
+                        <TextField
+                          id={`${coach.slug}-new-password`}
+                          name="password"
+                          type="password"
+                          label="Create Password"
+                          required
+                          invalid={Boolean(error)}
+                          value={newPassword}
+                          onChange={(event) => setNewPassword(event.target.value)}
+                        />
+                        <div className="mt-3">
+                          <PasswordRules value={newPassword} />
+                        </div>
+                      </div>
                       <TextField id={`${coach.slug}-player`} name="playerName" label="Player Name" required />
                       <TextField
                         id={`${coach.slug}-age`}
@@ -383,9 +429,25 @@ export default function CoachLessonCard({
                         label="Age Group"
                         defaultValue="12U"
                       />
-                      {error && <p className="text-sm text-red-700">{error}</p>}
-                      <Button type="submit" disabled={pending}>
-                        {pending ? "Creating…" : "Create Account And Continue"}
+                      {error && (
+                        <motion.p
+                          key={shakeKey}
+                          initial={{ x: 0 }}
+                          animate={{ x: [0, -10, 10, -7, 7, -3, 3, 0] }}
+                          transition={{ duration: 0.45 }}
+                          className="text-sm font-medium text-red-700"
+                        >
+                          {error}
+                        </motion.p>
+                      )}
+                      <Button type="submit" pending={pending}>
+                        {pending ? (
+                          <>
+                            <Spinner className="h-4 w-4" /> Creating
+                          </>
+                        ) : (
+                          "Create Account And Continue"
+                        )}
                       </Button>
                     </form>
                   )}
