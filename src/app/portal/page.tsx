@@ -27,7 +27,6 @@ export default async function PortalPage({
             Client <span className="text-green-400">Portal</span>
           </>
         }
-        description="Parents manage bookings here. Coaches run slots, camps, and the calendar."
       />
 
       <section className="bg-bone py-20 sm:py-28">

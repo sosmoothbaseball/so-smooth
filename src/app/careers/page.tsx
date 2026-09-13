@@ -17,7 +17,6 @@ export default function CareersPage() {
             Come <span className="text-green-400">Work</span> With Us
           </>
         }
-        description="Tell us who you are and what you want to run. Submit is visual for now."
       />
 
       <section className="bg-bone py-20 sm:py-28">

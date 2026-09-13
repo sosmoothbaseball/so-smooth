@@ -83,11 +83,15 @@ export default async function LessonsPage({
       />
       <section className="bg-bone py-20 sm:py-28">
         <div className="mx-auto flex max-w-5xl flex-col gap-8 px-6">
-          {publicSlots.length === 0 && (
+          {cards.length === 0 ? (
+            <p className="rounded-3xl border border-dashed border-ink/15 bg-white px-6 py-8 text-sm text-ink/55">
+              No coaches are offering private lessons right now. Check back soon.
+            </p>
+          ) : publicSlots.length === 0 ? (
             <p className="rounded-3xl border border-dashed border-ink/15 bg-white px-6 py-8 text-sm text-ink/55">
               No open lesson times this week. Coaches set repeating weekly hours from the portal.
             </p>
-          )}
+          ) : null}
           {cards.map((coach) => {
             const coachSlots = slotsForCoach(publicSlots, coach);
             return (

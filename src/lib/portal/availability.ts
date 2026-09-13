@@ -112,6 +112,17 @@ export async function replaceWeeklyHours(coachId: string, rules: WeeklyRule[]) {
   ]);
 }
 
+export async function clearUnbookedLessonSlots(coachId: string) {
+  const { start } = lessonBoardWindow();
+  await prisma.lessonSlot.deleteMany({
+    where: {
+      coachId,
+      status: { in: ["open", "blocked"] },
+      startsAt: { gte: start },
+    },
+  });
+}
+
 export async function syncCoachLessonSlots(coachId: string, options?: { replaceOpen?: boolean }) {
   const rules = await prisma.weeklyHours.findMany({ where: { coachId } });
   const { start, end } = lessonBoardWindow();

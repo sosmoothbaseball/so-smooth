@@ -19,6 +19,7 @@ import { TextField } from "@/components/ui/FormField";
 import BookingConfirmed from "@/components/portal/BookingConfirmed";
 import PasswordRules from "@/components/portal/PasswordRules";
 import { passwordMeetsRules, PASSWORD_RULES_MESSAGE } from "@/lib/portal/password";
+import { phoneLooksValid, PHONE_REQUIRED_MESSAGE } from "@/lib/portal/phone";
 import { cn } from "@/lib/utils";
 
 type Player = { id: string; name: string; ageGroup: string };
@@ -151,6 +152,11 @@ export default function CoachLessonCard({
   }
 
   async function createAccount(formData: FormData) {
+    if (!phoneLooksValid(String(formData.get("phone") || ""))) {
+      setError(PHONE_REQUIRED_MESSAGE);
+      setShakeKey((key) => key + 1);
+      return;
+    }
     if (!passwordMeetsRules(String(formData.get("password") || ""))) {
       setError(PASSWORD_RULES_MESSAGE);
       setShakeKey((key) => key + 1);
@@ -406,6 +412,13 @@ export default function CoachLessonCard({
                     >
                       <input type="hidden" name="slotId" value={activeSlot.id} />
                       <TextField id={`${coach.slug}-name`} name="name" label="Your Name" required />
+                      <TextField
+                        id={`${coach.slug}-phone`}
+                        name="phone"
+                        type="tel"
+                        label="Phone"
+                        required
+                      />
                       <TextField id={`${coach.slug}-new-email`} name="email" type="email" label="Email" required />
                       <div>
                         <TextField

@@ -1,4 +1,4 @@
-import { GraduationCap, Heart, Shield, Target, Trophy, Users } from "lucide-react";
+import { GraduationCap, Heart, Shield, Target, Users, Zap } from "lucide-react";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { StaggerGroup, StaggerItem } from "@/components/ui/Stagger";
 
@@ -28,10 +28,10 @@ const FEATURES = [
       "Training levels from youth fundamentals through professional development, matched to each player.",
   },
   {
-    icon: Trophy,
-    title: "Competitive Teams",
+    icon: Zap,
+    title: "Speed, Agility & Strength",
     description:
-      "Select travel teams with real tournament competition and accountable, team-first culture.",
+      "Athletic work that builds a faster first step, cleaner movement, and stronger players on the field.",
   },
   {
     icon: Heart,

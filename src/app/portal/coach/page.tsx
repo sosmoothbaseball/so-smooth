@@ -13,6 +13,8 @@ import PortalPanel from "@/components/portal/PortalPanel";
 import WeeklyHoursForm from "@/components/portal/WeeklyHoursForm";
 import Button from "@/components/ui/Button";
 import ActionForm from "@/components/portal/ActionForm";
+import ParentContact from "@/components/portal/ParentContact";
+import OfferLessonsCard from "@/components/portal/OfferLessonsCard";
 
 export default async function CoachSchedulePage() {
   const user = await requireCoach();
@@ -21,6 +23,7 @@ export default async function CoachSchedulePage() {
     getCoachBookings(user.id),
     getWeeklyHours(user.id),
   ]);
+  const offering = hours.length > 0;
   const todayKey = dayKey(new Date());
   const upcomingDays = weekDays(0)
     .filter((date) => dayKey(date) >= todayKey)
@@ -37,7 +40,8 @@ export default async function CoachSchedulePage() {
 
   return (
     <PortalShell user={user} pathname="/portal/coach">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+      <OfferLessonsCard offering={offering}>
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[0.95fr_1.05fr]">
         <PortalPanel
           title="Set Availability"
           description="Set hours once. They repeat every week. Families only see future open times for this week."
@@ -106,9 +110,18 @@ export default async function CoachSchedulePage() {
                           key={slot.id}
                           className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
                         >
-                          <p className="text-sm text-ink/80">
-                            {formatRange(slot.startsAt, slot.endsAt)}
-                          </p>
+                          <div>
+                            <p className="text-sm text-ink/80">
+                              {formatRange(slot.startsAt, slot.endsAt)}
+                            </p>
+                            {slot.booking ? (
+                              <ParentContact
+                                name={slot.booking.parent.name}
+                                email={slot.booking.parent.email}
+                                phone={slot.booking.parent.phone}
+                              />
+                            ) : null}
+                          </div>
                           <p className="text-xs font-semibold uppercase tracking-wide text-ink/45">
                             Booked — cancel the lesson first
                           </p>
@@ -122,7 +135,9 @@ export default async function CoachSchedulePage() {
           </ul>
         </PortalPanel>
       </div>
+      </OfferLessonsCard>
 
+      {(offering || bookings.length > 0) && (
       <div className="mt-6">
         <PortalPanel title="Booked Lessons">
           <ul className="flex flex-col gap-3">
@@ -138,9 +153,12 @@ export default async function CoachSchedulePage() {
                   <p className="font-display text-2xl uppercase tracking-wide text-ink">
                     {booking.player.name}
                   </p>
-                  <p className="mt-1 text-sm text-ink/60">
-                    {booking.player.ageGroup} · Parent {booking.parent.name}
-                  </p>
+                  <p className="mt-1 text-sm text-ink/60">{booking.player.ageGroup}</p>
+                  <ParentContact
+                    name={booking.parent.name}
+                    email={booking.parent.email}
+                    phone={booking.parent.phone}
+                  />
                   <p className="mt-2 text-sm text-ink/70">
                     {formatRange(booking.slot.startsAt, booking.slot.endsAt)}
                   </p>
@@ -163,6 +181,7 @@ export default async function CoachSchedulePage() {
           </ul>
         </PortalPanel>
       </div>
+      )}
     </PortalShell>
   );
 }

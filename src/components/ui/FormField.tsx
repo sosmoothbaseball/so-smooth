@@ -32,13 +32,28 @@ type TextFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   invalid?: boolean;
 };
 
-export function TextField({ label, id, className, invalid, ...props }: TextFieldProps) {
+export function TextField({
+  label,
+  id,
+  className,
+  invalid,
+  disabled,
+  readOnly,
+  ...props
+}: TextFieldProps) {
   return (
     <FieldShell label={label} htmlFor={id}>
       <input
         id={id}
+        disabled={disabled}
+        readOnly={readOnly}
         aria-invalid={invalid || undefined}
-        className={cn(fieldClass, invalid && "border-red-500 focus:border-red-500", className)}
+        className={cn(
+          fieldClass,
+          invalid && "border-red-500 focus:border-red-500",
+          (disabled || readOnly) && "cursor-not-allowed bg-bone text-ink/50",
+          className,
+        )}
         {...props}
       />
     </FieldShell>

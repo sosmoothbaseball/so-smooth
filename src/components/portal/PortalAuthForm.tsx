@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { loginAction, signupAction } from "@/lib/portal/actions";
 import { passwordMeetsRules, PASSWORD_RULES_MESSAGE } from "@/lib/portal/password";
+import { phoneLooksValid, PHONE_REQUIRED_MESSAGE } from "@/lib/portal/phone";
 import Button from "@/components/ui/Button";
 import { TextField } from "@/components/ui/FormField";
 import Spinner from "@/components/ui/Spinner";
@@ -33,6 +34,10 @@ export default function PortalAuthForm({ initialError = "" }: { initialError?: s
     if (pending) return;
     setError("");
 
+    if (mode === "signup" && !phoneLooksValid(String(formData.get("phone") || ""))) {
+      showError(PHONE_REQUIRED_MESSAGE);
+      return;
+    }
     if (mode === "signup" && !passwordMeetsRules(String(formData.get("password") || ""))) {
       showError(PASSWORD_RULES_MESSAGE);
       return;
@@ -86,6 +91,7 @@ export default function PortalAuthForm({ initialError = "" }: { initialError?: s
               type="tel"
               label="Phone"
               autoComplete="tel"
+              required
             />
           </>
         )}

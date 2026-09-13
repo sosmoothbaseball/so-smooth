@@ -21,7 +21,13 @@ export type CoachEventCardData = {
   endsAt: string;
   capacity: number;
   price: string;
-  signups: { id: string; playerName: string; parentName: string }[];
+  signups: {
+    id: string;
+    playerName: string;
+    parentName: string;
+    parentEmail: string;
+    parentPhone: string;
+  }[];
 };
 
 export default function CoachEventCard({ event }: { event: CoachEventCardData }) {
@@ -137,6 +143,19 @@ export default function CoachEventCard({ event }: { event: CoachEventCardData })
             >
               <span>
                 {signup.playerName} · {signup.parentName}
+                <span className="mt-1 block text-xs text-ink/55">
+                  <a href={`mailto:${signup.parentEmail}`} className="hover:text-green-700">
+                    {signup.parentEmail}
+                  </a>
+                  {signup.parentPhone ? (
+                    <>
+                      {" · "}
+                      <a href={`tel:${signup.parentPhone}`} className="hover:text-green-700">
+                        {signup.parentPhone}
+                      </a>
+                    </>
+                  ) : null}
+                </span>
               </span>
               <ActionForm
                 action={cancelEventSignupAction}

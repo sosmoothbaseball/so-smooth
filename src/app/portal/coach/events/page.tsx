@@ -100,6 +100,8 @@ export default async function CoachEventsPage() {
                     id: signup.id,
                     playerName: signup.player.name,
                     parentName: signup.parent.name,
+                    parentEmail: signup.parent.email,
+                    parentPhone: signup.parent.phone,
                   })),
                 }}
               />

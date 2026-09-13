@@ -53,6 +53,7 @@ export async function linkAuthUser(user: User) {
     data: {
       email,
       name: String(user.user_metadata?.name || email.split("@")[0]),
+      phone: String(user.user_metadata?.phone || ""),
       password: "",
       authId: user.id,
       role: "parent",

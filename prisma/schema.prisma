@@ -12,6 +12,7 @@ model Profile {
   id        String   @id @default(cuid())
   email     String   @unique
   name      String
+  phone     String   @default("")
   role      String   @default("parent")
   password  String
   authId    String?  @unique

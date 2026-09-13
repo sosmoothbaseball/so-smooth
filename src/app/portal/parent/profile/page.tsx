@@ -19,13 +19,32 @@ export default async function ParentProfilePage({
   return (
     <PortalShell user={user} pathname="/portal/parent/profile">
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <PortalPanel title="Edit Profile" description="Your family login and display name.">
+        <PortalPanel title="Edit Profile" description="Email stays locked because you use it to sign in. You can update your phone anytime.">
           {password === "1" && (
             <p className="mb-4 text-sm text-green-800">Password updated.</p>
           )}
           <ActionForm action={updateProfileAction} className="flex flex-col gap-4">
             <TextField id="name" name="name" label="Name" defaultValue={user.name} required />
-            <TextField id="email" name="email" type="email" label="Email" defaultValue={user.email} required />
+            <div>
+              <TextField
+                id="email"
+                name="email"
+                type="email"
+                label="Email"
+                defaultValue={user.email}
+                readOnly
+              />
+              <p className="mt-2 text-xs text-ink/40">Locked. This is your login.</p>
+            </div>
+            <TextField
+              id="phone"
+              name="phone"
+              type="tel"
+              label="Phone"
+              defaultValue={user.phone}
+              autoComplete="tel"
+              required
+            />
             <Button type="submit">Save Profile</Button>
           </ActionForm>
           <div className="mt-4">

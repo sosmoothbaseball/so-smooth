@@ -18,19 +18,19 @@ const STATS = [
 
 export default function Hero() {
   return (
-    <section className="relative isolate overflow-hidden bg-ink pt-36 pb-28 sm:pt-44 sm:pb-36">
+    <section className="relative isolate flex h-svh min-h-[36rem] flex-col overflow-hidden bg-ink pt-24 pb-6 sm:pt-28">
       <Image
         src="/brand/home-hero.jpg"
         alt="So Smooth jerseys in the locker room"
         fill
         priority
         sizes="100vw"
-        className="z-0 object-cover object-[center_35%]"
+        className="z-0 object-contain object-center"
       />
-      <div className="absolute inset-0 z-0 bg-gradient-to-b from-ink/55 via-ink/40 to-ink/80" />
+      <div className="absolute inset-0 z-0 bg-gradient-to-b from-ink/25 via-ink/10 to-ink/70" />
 
-      <div className="relative z-10 mx-auto flex max-w-7xl flex-col items-center px-6 text-center">
-        <h1 className="font-display text-5xl uppercase leading-[0.95] tracking-wide text-bone sm:text-7xl md:text-8xl">
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center px-6 text-center">
+        <h1 className="font-display text-5xl uppercase leading-[0.95] tracking-wide text-bone drop-shadow-[0_2px_16px_rgba(0,0,0,0.65)] sm:text-7xl md:text-8xl">
           {HEADLINE_LINES.map((line, li) => (
             <span key={li} className="block overflow-hidden">
               <motion.span
@@ -62,7 +62,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.55 }}
-          className="mt-7 max-w-2xl text-base leading-relaxed text-bone/65 sm:text-lg"
+          className="mt-7 max-w-2xl text-base leading-relaxed text-bone drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)] sm:text-lg"
         >
           So Smooth is a year-round training academy and travel program for
           youth players, built on fundamentals, discipline, and a real love
@@ -88,7 +88,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.85 }}
-          className="mt-16 grid w-full max-w-2xl grid-cols-3 gap-4 border-t border-white/10 pt-8"
+          className="mt-10 grid w-full max-w-2xl grid-cols-3 gap-4 border-t border-white/10 pt-6 sm:mt-14 sm:pt-8"
         >
           {STATS.map(({ icon: Icon, label, value }) => (
             <div key={label} className="flex flex-col items-center gap-2">
@@ -105,7 +105,7 @@ export default function Hero() {
       </div>
 
       <motion.div
-        className="relative z-10 mx-auto mt-14 flex w-fit items-center justify-center"
+        className="relative z-10 mx-auto mb-1 flex w-fit shrink-0 items-center justify-center"
         animate={{ y: [0, 8, 0] }}
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
       >

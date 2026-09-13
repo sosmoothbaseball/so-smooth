@@ -10,6 +10,7 @@ export async function getOpenSlotsByCoach() {
     where: {
       status: "open",
       startsAt: { gte: start, lt: end },
+      coach: { weeklyHours: { some: {} } },
     },
     select: {
       id: true,
@@ -24,7 +25,7 @@ export async function getOpenSlotsByCoach() {
 
 export function getLessonCoaches() {
   return prisma.profile.findMany({
-    where: { role: "coach" },
+    where: { role: "coach", weeklyHours: { some: {} } },
     select: {
       id: true,
       name: true,

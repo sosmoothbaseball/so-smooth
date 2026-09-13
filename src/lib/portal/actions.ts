@@ -14,7 +14,11 @@ import {
 } from "@/lib/portal/auth";
 import { now } from "@/lib/portal/time";
 import { parseLessonMinutes, parseTimeToMinutes } from "@/lib/portal/hours";
-import { replaceWeeklyHours, syncCoachLessonSlots } from "@/lib/portal/availability";
+import {
+  clearUnbookedLessonSlots,
+  replaceWeeklyHours,
+  syncCoachLessonSlots,
+} from "@/lib/portal/availability";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import {
   ClaimFailed,
@@ -24,6 +28,7 @@ import {
   readLessonSlotState,
 } from "@/lib/portal/booking";
 import { passwordMeetsRules, PASSWORD_RULES_MESSAGE } from "@/lib/portal/password";
+import { normalizePhone, phoneLooksValid, PHONE_REQUIRED_MESSAGE } from "@/lib/portal/phone";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -96,11 +101,14 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
   const email = String(formData.get("email") || "")
     .trim()
     .toLowerCase();
-  const phone = String(formData.get("phone") || "").trim();
+  const phone = normalizePhone(String(formData.get("phone") || ""));
   const password = String(formData.get("password") || "");
 
   if (!name || !email || !password) {
     return fail("Name, email, and password are required.");
+  }
+  if (!phoneLooksValid(phone)) {
+    return fail(PHONE_REQUIRED_MESSAGE);
   }
   if (!passwordMeetsRules(password)) {
     return fail(PASSWORD_RULES_MESSAGE);
@@ -131,6 +139,7 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
       data: {
         name,
         email,
+        phone,
         password: "",
         authId: data.user.id,
         role: "parent",
@@ -149,6 +158,7 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
     data: {
       name,
       email,
+      phone,
       password,
       role: "parent",
     },
@@ -160,6 +170,14 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
 export async function logoutAction() {
   await clearSession();
   redirect("/portal");
+}
+
+export async function stopOfferingLessonsAction(): Promise<ActionResult> {
+  const coach = await requireCoach();
+  await replaceWeeklyHours(coach.id, []);
+  await clearUnbookedLessonSlots(coach.id);
+  refreshLessons();
+  return ok();
 }
 
 export async function saveWeeklyHoursAction(formData: FormData): Promise<ActionResult> {
@@ -301,6 +319,7 @@ export async function createParentForBookingAction(formData: FormData) {
   const email = String(formData.get("email") || "")
     .trim()
     .toLowerCase();
+  const phone = normalizePhone(String(formData.get("phone") || ""));
   const password = String(formData.get("password") || "");
   const playerName = String(formData.get("playerName") || "").trim();
   const ageGroup = String(formData.get("ageGroup") || "Youth").trim() || "Youth";
@@ -308,6 +327,9 @@ export async function createParentForBookingAction(formData: FormData) {
 
   if (!name || !email || !password) {
     return { ok: false, error: "Name, email, and password are required." };
+  }
+  if (!phoneLooksValid(phone)) {
+    return { ok: false, error: PHONE_REQUIRED_MESSAGE };
   }
   if (!passwordMeetsRules(password)) {
     return { ok: false, error: PASSWORD_RULES_MESSAGE };
@@ -326,7 +348,7 @@ export async function createParentForBookingAction(formData: FormData) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name } },
+      options: { data: { name, phone } },
     });
     if (error) return { ok: false, error: error.message };
     if (!data.user) {
@@ -336,6 +358,7 @@ export async function createParentForBookingAction(formData: FormData) {
       data: {
         name,
         email,
+        phone,
         password: "",
         authId: data.user.id,
         role: "parent",
@@ -355,6 +378,7 @@ export async function createParentForBookingAction(formData: FormData) {
     data: {
       name,
       email,
+      phone,
       password,
       role: "parent",
       players: { create: { name: playerName, ageGroup } },
@@ -681,19 +705,13 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
   const user = await getSession();
   if (!user) return fail("Sign in first.");
   const name = String(formData.get("name") || "").trim();
-  const email = String(formData.get("email") || "")
-    .trim()
-    .toLowerCase();
-  if (!name || !email) return fail("Name and email are required.");
-
-  const taken = await prisma.profile.findFirst({
-    where: { email, NOT: { id: user.id } },
-  });
-  if (taken) return fail("That email is already in use.");
+  const phone = normalizePhone(String(formData.get("phone") || ""));
+  if (!name) return fail("Name is required.");
+  if (!phoneLooksValid(phone)) return fail(PHONE_REQUIRED_MESSAGE);
 
   await prisma.profile.update({
     where: { id: user.id },
-    data: { name, email },
+    data: { name, phone },
   });
   refreshProfiles();
   return ok();
