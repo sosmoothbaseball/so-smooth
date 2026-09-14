@@ -23,7 +23,7 @@ export default function CareersPage() {
         <div className="mx-auto max-w-3xl px-6">
           <div className="rounded-3xl border border-ink/10 bg-white p-6 shadow-sm sm:p-10">
             <h2 className="mb-8 font-display text-4xl uppercase tracking-wide text-ink">
-              Get In Touch
+              Interested in joining?
             </h2>
             <CareersForm />
           </div>

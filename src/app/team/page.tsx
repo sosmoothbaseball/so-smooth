@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 const NOTES = [
   { title: "Tryouts", body: "Twice a year. Book a look on Upcoming Events when coaches post one." },
   { title: "Season", body: "Year-round training with tournament weekends." },
-  { title: "Culture", body: "Same coaching language from 10U through 14U." },
+  { title: "Culture", body: "Same coaching language across 10U, 11U, 12U, and 14U." },
 ];
 
 export default function TeamPage() {

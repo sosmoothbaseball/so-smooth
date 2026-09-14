@@ -12,7 +12,7 @@ const ROWS = [
     description:
       "Competitive select teams for 10U, 11U, 12U, and 14U, built on strong instruction, consistent teammates, and a genuine team-first culture. Twice-yearly tryouts, year-round tournament play.",
     cta: { label: "Meet the Team", href: "/team" },
-    figure: "10U-14U",
+    figure: "10–12U, 14U",
     reverse: false,
   },
   {

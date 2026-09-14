@@ -25,9 +25,9 @@ export default function CTASection({
       Ready to Join the <span className="text-yellow-400">Team?</span>
     </>
   ),
-  description = "Book a tryout, sign up for a camp, or reach out to our staff. Your player's next step starts here.",
-  primary = { href: "/careers", label: "Get In Touch" },
-  secondary = { href: "/training", label: "View Programs" },
+  description = "Book a tryout, take a private lesson, or sign up for a camp. Your player's next step starts here.",
+  primary = { href: "/team", label: "Meet the Team" },
+  secondary = { href: "/lessons", label: "Private Lessons" },
 }: CTASectionProps) {
   return (
     <section className="relative overflow-hidden bg-green-800 py-20 sm:py-28">

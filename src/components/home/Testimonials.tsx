@@ -7,7 +7,7 @@ const TESTIMONIALS = [
     quote:
       "My son's confidence and fundamentals have improved so much since joining. The coaches balance fun with serious skill-building.",
     name: "Jessica R.",
-    role: "Parent, 10U Player",
+    role: "Parent, 14U Player",
   },
   {
     quote:
