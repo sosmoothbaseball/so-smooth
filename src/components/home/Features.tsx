@@ -17,9 +17,9 @@ const FEATURES = [
   },
   {
     icon: Shield,
-    title: "Teams Ages 11U-14U",
+    title: "Teams Ages 10U-14U",
     description:
-      "Select travel teams for 11U through 14U, with real tournament play and a team-first culture.",
+      "Select travel teams for 10U, 11U, 12U, and 14U, with real tournament play and a team-first culture.",
   },
   {
     icon: GraduationCap,

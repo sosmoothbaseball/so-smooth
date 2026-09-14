@@ -3,7 +3,7 @@ import AnimatedSection from "@/components/ui/AnimatedSection";
 
 const STATS = [
   { value: 500, suffix: "+", label: "Players Trained" },
-  { display: "11U-14U", label: "Teams Ages" },
+  { display: "10U-14U", label: "Teams Ages" },
   { display: "Youth-Professional", label: "Training Levels" },
 ];
 

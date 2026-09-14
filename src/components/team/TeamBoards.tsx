@@ -13,17 +13,17 @@ type Team = {
 };
 
 const TEAMS: Record<string, Team> = {
+  "10U": {
+    focus: "First travel year",
+    note: "Fundamentals, game IQ, and a team that stays together.",
+  },
   "11U": {
     focus: "Fundamentals + game IQ",
-    note: "First travel year for a lot of our players.",
+    note: "More innings, more positions, same coaching language.",
   },
   "12U": {
     focus: "Reps that stick",
     note: "More innings, more positions, more accountability.",
-  },
-  "13U": {
-    focus: "Compete with purpose",
-    note: "Tournament pace with a still-teaching staff.",
   },
   "14U": {
     focus: "High school ready",

@@ -7,13 +7,13 @@ import TeamBoards from "@/components/team/TeamBoards";
 export const metadata: Metadata = {
   title: "Team | So Smooth",
   description:
-    "So Smooth travel teams for ages 11U through 14U. Competitive, team-first baseball.",
+    "So Smooth travel teams for 10U, 11U, 12U, and 14U. Competitive, team-first baseball.",
 };
 
 const NOTES = [
   { title: "Tryouts", body: "Twice a year. Book a look on Upcoming Events when coaches post one." },
   { title: "Season", body: "Year-round training with tournament weekends." },
-  { title: "Culture", body: "Same coaching language from 11U through 14U." },
+  { title: "Culture", body: "Same coaching language from 10U through 14U." },
 ];
 
 export default function TeamPage() {
@@ -23,7 +23,7 @@ export default function TeamPage() {
         eyebrow="Travel Baseball"
         title={
           <>
-            Teams <span className="text-green-400">11U-14U</span>
+            Teams <span className="text-green-400">10U · 11U · 12U · 14U</span>
           </>
         }
         description="Select travel teams with real tournament play and a team-first culture. Switch age groups to see each team."

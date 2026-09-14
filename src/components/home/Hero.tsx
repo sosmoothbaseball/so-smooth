@@ -12,7 +12,7 @@ const HEADLINE_LINES = [
 
 const STATS = [
   { icon: Users2, label: "Players Trained", value: "500+" },
-  { icon: Shield, label: "Teams Ages", value: "11U-14U" },
+  { icon: Shield, label: "Teams Ages", value: "10U-14U" },
   { icon: GraduationCap, label: "Training Levels", value: "Youth-Professional" },
 ];
 
