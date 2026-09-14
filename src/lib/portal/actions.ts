@@ -36,7 +36,7 @@ import { careerRecentlySent, CAREER_WAIT_MS, markCareerSent } from "@/lib/portal
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
-function fail(error: string): ActionResult {
+function fail(error: string): { ok: false; error: string } {
   return { ok: false, error };
 }
 
@@ -779,16 +779,20 @@ export async function changePasswordAction(formData: FormData): Promise<ActionRe
   return ok();
 }
 
-export async function addPlayerAction(formData: FormData): Promise<ActionResult> {
+export async function addPlayerAction(formData: FormData): Promise<
+  | { ok: true; player: { id: string; name: string; ageGroup: string } }
+  | { ok: false; error: string }
+> {
   const parent = await requireParent();
   const name = String(formData.get("playerName") || "").trim();
   const ageGroup = String(formData.get("ageGroup") || "Youth").trim() || "Youth";
   if (!name) return fail("Player name is required.");
-  await prisma.player.create({
+  const player = await prisma.player.create({
     data: { parentId: parent.id, name, ageGroup },
+    select: { id: true, name: true, ageGroup: true },
   });
   refreshProfiles();
-  return ok();
+  return { ok: true, player };
 }
 
 export async function updatePlayerAction(formData: FormData): Promise<ActionResult> {

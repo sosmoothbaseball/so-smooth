@@ -17,18 +17,17 @@ import Button from "@/components/ui/Button";
 import Spinner from "@/components/ui/Spinner";
 import { TextField } from "@/components/ui/FormField";
 import BookingConfirmed from "@/components/portal/BookingConfirmed";
+import PickOrAddPlayer, { type BookingPlayer } from "@/components/portal/PickOrAddPlayer";
 import PasswordRules from "@/components/portal/PasswordRules";
 import { passwordMeetsRules, PASSWORD_RULES_MESSAGE } from "@/lib/portal/password";
 import { phoneLooksValid, PHONE_REQUIRED_MESSAGE } from "@/lib/portal/phone";
 import { cn } from "@/lib/utils";
 
-type Player = { id: string; name: string; ageGroup: string };
-
 type Session = {
   id: string;
   name: string;
   role: string;
-  players: Player[];
+  players: BookingPlayer[];
 } | null;
 
 export default function CoachLessonCard({
@@ -67,6 +66,18 @@ export default function CoachLessonCard({
   const [newPassword, setNewPassword] = useState("");
   const [pending, setPending] = useState(false);
   const [confirmed, setConfirmed] = useState<{ title: string; detail: string } | null>(null);
+  const [players, setPlayers] = useState<BookingPlayer[]>(session?.players ?? []);
+  const [picked, setPicked] = useState<BookingPlayer | null>(session?.players[0] ?? null);
+  const [bookingStep, setBookingStep] = useState<"player" | "confirm">("player");
+
+  useEffect(() => {
+    setPlayers(session?.players ?? []);
+    setPicked((current) => {
+      const list = session?.players ?? [];
+      if (current && list.some((player) => player.id === current.id)) return current;
+      return list[0] ?? null;
+    });
+  }, [session]);
 
   useEffect(() => {
     if (!initialSlotId) return;
@@ -95,6 +106,8 @@ export default function CoachLessonCard({
   async function openBook(slot: PublicSlot) {
     setError("");
     setMode("login");
+    setBookingStep("player");
+    setPicked(players[0] ?? session?.players[0] ?? null);
     setActiveSlot(slot);
     const check = new FormData();
     check.set("slotId", slot.id);
@@ -129,13 +142,14 @@ export default function CoachLessonCard({
       return;
     }
     if (slotId) markTaken(slotId);
-    const playerId = String(formData.get("playerId") || "");
-    const player = session?.players.find((entry) => entry.id === playerId);
+    const playerId = String(formData.get("playerId") || picked?.id || "");
+    const player = players.find((entry) => entry.id === playerId) || picked;
     const when = `${formatSlotDay(activeSlot.startsAt)} · ${formatSlotTime(activeSlot.startsAt)} – ${formatSlotTime(activeSlot.endsAt)}`;
     setActiveSlot(null);
+    setBookingStep("player");
     setConfirmed({
       title: coach.name,
-      detail: [player?.name, when, coach.location].filter(Boolean).join(" · "),
+      detail: [player?.name, player?.ageGroup, when, coach.location].filter(Boolean).join(" · "),
     });
     router.refresh();
   }
@@ -269,7 +283,7 @@ export default function CoachLessonCard({
 
       {activeSlot && (
         <div className="fixed inset-0 z-[70] flex items-end justify-center bg-ink/60 p-4 sm:items-center">
-          <div className="w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-[0_24px_50px_-28px_rgba(7,16,12,0.55)]">
+          <div className="w-full max-w-lg overflow-y-auto rounded-3xl bg-white shadow-[0_24px_50px_-28px_rgba(7,16,12,0.55)] max-h-[90svh]">
             <div className="flex items-start justify-between border-b border-ink/10 px-6 py-5">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-green-700">
@@ -298,39 +312,71 @@ export default function CoachLessonCard({
 
             <div className="px-6 py-6">
               {session?.role === "parent" ? (
-                <form
-                  onSubmit={async (event) => {
-                    event.preventDefault();
-                    await confirmBooking(new FormData(event.currentTarget));
-                  }}
-                  className="flex flex-col gap-4"
-                >
-                  <input type="hidden" name="slotId" value={activeSlot.id} />
-                  {session.players.length > 0 ? (
-                    <label className="flex flex-col gap-2">
-                      <span className="text-xs font-semibold uppercase tracking-[0.18em] text-ink/55">
-                        Player
-                      </span>
-                      <select
-                        name="playerId"
-                        defaultValue={session.players[0].id}
-                        className="w-full rounded-xl border border-ink/15 bg-white px-4 py-3 text-sm text-ink"
+                bookingStep === "player" ? (
+                  <div className="flex flex-col gap-4">
+                    <PickOrAddPlayer
+                      key={activeSlot.id}
+                      idPrefix={coach.slug}
+                      players={players}
+                      selected={picked}
+                      onSelect={setPicked}
+                      onPlayersChange={setPlayers}
+                      onCreated={(player) => {
+                        setPicked(player);
+                        setBookingStep("confirm");
+                      }}
+                    />
+                    {error && <p className="text-sm text-red-700">{error}</p>}
+                    {players.length > 0 ? (
+                      <Button type="button" disabled={!picked} onClick={() => setBookingStep("confirm")}>
+                        Continue
+                      </Button>
+                    ) : null}
+                  </div>
+                ) : picked ? (
+                  <form
+                    onSubmit={async (event) => {
+                      event.preventDefault();
+                      await confirmBooking(new FormData(event.currentTarget));
+                    }}
+                    className="flex flex-col gap-4"
+                  >
+                    <input type="hidden" name="slotId" value={activeSlot.id} />
+                    <input type="hidden" name="playerId" value={picked.id} />
+                    <div className="rounded-2xl border border-ink/10 bg-bone p-5">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-green-700">
+                        Confirm player
+                      </p>
+                      <p className="mt-2 font-display text-3xl uppercase tracking-wide text-ink">
+                        {picked.name}
+                      </p>
+                      <p className="mt-1 text-sm text-ink/55">{picked.ageGroup}</p>
+                      <div className="mt-4 border-t border-ink/10 pt-4 text-sm text-ink/65">
+                        <p>
+                          {formatSlotDay(activeSlot.startsAt)} · {formatSlotTime(activeSlot.startsAt)} –{" "}
+                          {formatSlotTime(activeSlot.endsAt)}
+                        </p>
+                        <p className="mt-1">
+                          {coach.name} · {coach.price} · {coach.location}
+                        </p>
+                      </div>
+                    </div>
+                    {error && <p className="text-sm text-red-700">{error}</p>}
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <Button type="submit" disabled={pending}>
+                        {pending ? "Booking…" : "Confirm Booking"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="onLight"
+                        disabled={pending}
+                        onClick={() => setBookingStep("player")}
                       >
-                        {session.players.map((player) => (
-                          <option key={player.id} value={player.id}>
-                            {player.name} · {player.ageGroup}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  ) : (
-                    <p className="text-sm text-ink/55">Add a player on your profile first.</p>
-                  )}
-                  {error && <p className="text-sm text-red-700">{error}</p>}
-                  <Button type="submit" disabled={pending || session.players.length === 0}>
-                    {pending ? "Booking…" : "Confirm Booking"}
-                  </Button>
-                </form>
+                        Change Player
+                      </Button>
+                    </div>
+                  </form>
+                ) : null
               ) : session?.role === "coach" ? (
                 <p className="text-sm text-ink/60">
                   You are signed in as a coach. Use a parent account to book a player.
