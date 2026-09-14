@@ -124,6 +124,15 @@ export async function clearUnbookedLessonSlots(coachId: string) {
 }
 
 export async function syncCoachLessonSlots(coachId: string, options?: { replaceOpen?: boolean }) {
+  const coach = await prisma.profile.findUnique({
+    where: { id: coachId },
+    select: { offersLessons: true },
+  });
+  if (!coach?.offersLessons) {
+    if (options?.replaceOpen) await clearUnbookedLessonSlots(coachId);
+    return;
+  }
+
   const rules = await prisma.weeklyHours.findMany({ where: { coachId } });
   const { start, end } = lessonBoardWindow();
 
@@ -202,9 +211,9 @@ export async function syncCoachLessonSlots(coachId: string, options?: { replaceO
 }
 
 export async function ensureLessonBoard() {
-  const coaches = await prisma.weeklyHours.findMany({
-    distinct: ["coachId"],
-    select: { coachId: true },
+  const coaches = await prisma.profile.findMany({
+    where: { role: "coach", offersLessons: true },
+    select: { id: true },
   });
-  await Promise.all(coaches.map((coach) => syncCoachLessonSlots(coach.coachId)));
+  await Promise.all(coaches.map((coach) => syncCoachLessonSlots(coach.id)));
 }

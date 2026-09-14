@@ -23,9 +23,16 @@ export class ClaimFailed extends Error {
 export async function readLessonSlotState(slotId: string) {
   const slot = await prisma.lessonSlot.findUnique({
     where: { id: slotId },
-    select: { id: true, status: true, startsAt: true },
+    select: {
+      id: true,
+      status: true,
+      startsAt: true,
+      coach: { select: { offersLessons: true } },
+    },
   });
-  if (!slot) return { ok: false as const, error: "That time is no longer on the board." };
+  if (!slot || !slot.coach.offersLessons) {
+    return { ok: false as const, error: "That time is no longer on the board." };
+  }
   if (slot.startsAt <= now()) return { ok: false as const, error: "That time already started." };
   if (!isWithinLessonBoard(slot.startsAt)) {
     return { ok: false as const, error: "Families can only book this week." };
@@ -41,10 +48,13 @@ export async function readEventState(eventId: string, playerId?: string) {
       id: true,
       startsAt: true,
       capacity: true,
+      status: true,
       _count: { select: { signups: { where: { status: "booked" } } } },
     },
   });
-  if (!event) return { ok: false as const, error: "That event is no longer listed." };
+  if (!event || event.status !== "open") {
+    return { ok: false as const, error: "That event is no longer listed." };
+  }
   if (event.startsAt <= now()) return { ok: false as const, error: "That event already started." };
   if (event._count.signups >= event.capacity) {
     return { ok: false as const, error: "That event just filled up." };
@@ -75,8 +85,11 @@ export async function claimLessonSlot(
     throw new ClaimFailed("taken");
   }
 
-  const slot = await tx.lessonSlot.findUnique({ where: { id: input.slotId } });
-  if (!slot) throw new ClaimFailed("gone");
+  const slot = await tx.lessonSlot.findUnique({
+    where: { id: input.slotId },
+    include: { coach: { select: { offersLessons: true } } },
+  });
+  if (!slot || !slot.coach.offersLessons) throw new ClaimFailed("gone");
   if (slot.startsAt <= current) throw new ClaimFailed("past");
   if (!isWithinLessonBoard(slot.startsAt)) throw new ClaimFailed("ahead");
   if (slot.status !== "open") throw new ClaimFailed("taken");
@@ -127,8 +140,14 @@ export async function claimEventSpot(
   tx: Prisma.TransactionClient,
   input: { eventId: string; parentId: string; playerId: string },
 ) {
-  const event = await tx.upcomingEvent.findUnique({ where: { id: input.eventId } });
-  if (!event) throw new ClaimFailed("gone");
+  const locked = await tx.$queryRaw<Array<{ id: string; capacity: number; startsAt: Date; status: string }>>`
+    SELECT id, capacity, "startsAt", status
+    FROM "UpcomingEvent"
+    WHERE id = ${input.eventId}
+    FOR UPDATE
+  `;
+  const event = locked[0];
+  if (!event || event.status !== "open") throw new ClaimFailed("gone");
   if (event.startsAt <= now()) throw new ClaimFailed("started");
 
   const existing = await tx.eventSignup.findUnique({

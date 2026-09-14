@@ -49,14 +49,34 @@ export default async function ParentBookingsPage() {
         </PortalPanel>
 
         <PortalPanel title="Camps · Clinics · Tryouts">
+          {events.some((signup) => signup.event.status === "cancelled") ? (
+            <p className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+              A coach cancelled one of your events. Details are marked below.
+            </p>
+          ) : null}
           <ul className="flex flex-col gap-3">
             {events.length === 0 && (
               <li className="text-sm text-ink/50">No upcoming event bookings.</li>
             )}
             {events.map((signup) => (
-              <li key={signup.id} className="rounded-2xl border border-ink/10 px-4 py-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-green-700">
-                  {eventTypeLabel(signup.event.type)}
+              <li
+                key={signup.id}
+                className={
+                  signup.event.status === "cancelled"
+                    ? "rounded-2xl border border-red-200 bg-red-50/70 px-4 py-4"
+                    : "rounded-2xl border border-ink/10 px-4 py-4"
+                }
+              >
+                <p
+                  className={
+                    signup.event.status === "cancelled"
+                      ? "text-[10px] font-semibold uppercase tracking-[0.18em] text-red-700"
+                      : "text-[10px] font-semibold uppercase tracking-[0.18em] text-green-700"
+                  }
+                >
+                  {signup.event.status === "cancelled"
+                    ? "Cancelled"
+                    : eventTypeLabel(signup.event.type)}
                 </p>
                 <p className="mt-1 font-display text-2xl uppercase tracking-wide text-ink">
                   {signup.event.title}
@@ -68,20 +88,26 @@ export default async function ParentBookingsPage() {
                 {signup.event.price ? (
                   <p className="mt-1 text-sm text-ink/50">{signup.event.price}</p>
                 ) : null}
-                <ActionForm
-                  action={cancelEventSignupAction}
-                  className="mt-4"
-                  confirm={{
-                    title: "Cancel this booking?",
-                    message: "Are you sure you want to cancel this event booking?",
-                    confirmLabel: "Cancel Booking",
-                  }}
-                >
-                  <input type="hidden" name="signupId" value={signup.id} />
-                  <Button type="submit" variant="onLight" size="sm">
-                    Cancel Booking
-                  </Button>
-                </ActionForm>
+                {signup.event.status === "cancelled" ? (
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-red-700">
+                    This event was cancelled
+                  </p>
+                ) : (
+                  <ActionForm
+                    action={cancelEventSignupAction}
+                    className="mt-4"
+                    confirm={{
+                      title: "Cancel this booking?",
+                      message: "Are you sure you want to cancel this event booking?",
+                      confirmLabel: "Cancel Booking",
+                    }}
+                  >
+                    <input type="hidden" name="signupId" value={signup.id} />
+                    <Button type="submit" variant="onLight" size="sm">
+                      Cancel Booking
+                    </Button>
+                  </ActionForm>
+                )}
               </li>
             ))}
           </ul>

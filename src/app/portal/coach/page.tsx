@@ -23,7 +23,7 @@ export default async function CoachSchedulePage() {
     getCoachBookings(user.id),
     getWeeklyHours(user.id),
   ]);
-  const offering = hours.length > 0;
+  const offering = user.offersLessons;
   const todayKey = dayKey(new Date());
   const upcomingDays = weekDays(0)
     .filter((date) => dayKey(date) >= todayKey)

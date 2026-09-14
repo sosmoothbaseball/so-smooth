@@ -57,7 +57,7 @@ export default async function CoachProfilePage({
           </ActionForm>
           <div className="mt-4">
             <Button href="/portal/coach/password" variant="onLight">
-              Change Password
+              Reset Password
             </Button>
           </div>
         </PortalPanel>

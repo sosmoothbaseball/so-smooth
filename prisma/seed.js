@@ -140,6 +140,11 @@ async function syncAuthUser(admin, account) {
 }
 
 async function main() {
+  if (process.env.ALLOW_DB_SEED !== "true") {
+    throw new Error(
+      "Refusing to seed. This wipes portal data. Set ALLOW_DB_SEED=true only for a disposable local/demo database.",
+    );
+  }
   if (!process.env.DATABASE_URL) {
     throw new Error("Set DATABASE_URL to the Supabase Postgres URI before seeding.");
   }
@@ -170,7 +175,7 @@ async function main() {
       email: "coach@sosmooth.test",
       name: "Carlos Vega",
       role: "coach",
-      password: "",
+      offersLessons: true,
       authId: authIds["coach@sosmooth.test"] || null,
       lessonSpec: {
         create: {
@@ -190,7 +195,6 @@ async function main() {
       email: "alex@sosmooth.test",
       name: "Alex Howard",
       role: "coach",
-      password: "",
       authId: authIds["alex@sosmooth.test"] || null,
       lessonSpec: {
         create: {
@@ -210,7 +214,6 @@ async function main() {
       email: "roberto@sosmooth.test",
       name: "Roberto Bueno",
       role: "coach",
-      password: "",
       authId: authIds["roberto@sosmooth.test"] || null,
       lessonSpec: {
         create: {
@@ -230,7 +233,6 @@ async function main() {
       email: "parent@sosmooth.test",
       name: "Jordan Reyes",
       role: "parent",
-      password: "",
       authId: authIds["parent@sosmooth.test"] || null,
     },
   });

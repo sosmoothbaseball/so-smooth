@@ -49,7 +49,7 @@ export default async function ParentProfilePage({
           </ActionForm>
           <div className="mt-4">
             <Button href="/portal/parent/password" variant="onLight">
-              Change Password
+              Reset Password
             </Button>
           </div>
         </PortalPanel>

@@ -7,6 +7,7 @@ const COACH_LINKS = [
   { href: "/portal/coach", label: "Lesson Schedule" },
   { href: "/portal/coach/calendar", label: "Calendar" },
   { href: "/portal/coach/events", label: "Add Events" },
+  { href: "/portal/coach/careers", label: "Careers" },
   { href: "/portal/coach/profile", label: "Edit Profile" },
 ];
 

@@ -15,18 +15,10 @@ export type SessionUser = NonNullable<Awaited<ReturnType<typeof getSession>>>;
 
 export async function getSession() {
   const supabase = await createSupabaseServer();
-  if (supabase) {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) return null;
-    return linkAuthUser(data.user);
-  }
-
-  const id = (await cookies()).get(COOKIE)?.value;
-  if (!id) return null;
-  return prisma.profile.findUnique({
-    where: { id },
-    include: profileInclude,
-  });
+  if (!supabase) return null;
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) return null;
+  return linkAuthUser(data.user);
 }
 
 export async function linkAuthUser(user: User) {
@@ -54,20 +46,10 @@ export async function linkAuthUser(user: User) {
       email,
       name: String(user.user_metadata?.name || email.split("@")[0]),
       phone: String(user.user_metadata?.phone || ""),
-      password: "",
       authId: user.id,
       role: "parent",
     },
     include: profileInclude,
-  });
-}
-
-export async function setSession(userId: string) {
-  (await cookies()).set(COOKIE, userId, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
   });
 }
 
@@ -97,4 +79,55 @@ export async function requireParent() {
 
 export function portalHome(role: string) {
   return role === "coach" ? "/portal/coach" : "/portal/parent";
+}
+
+export async function ensureParentProfile(input: {
+  authId: string;
+  name: string;
+  email: string;
+  phone: string;
+  player?: { name: string; ageGroup: string };
+}) {
+  try {
+    return await prisma.profile.create({
+      data: {
+        name: input.name,
+        email: input.email,
+        phone: input.phone,
+        authId: input.authId,
+        role: "parent",
+        ...(input.player ? { players: { create: input.player } } : {}),
+      },
+    });
+  } catch {
+    const existing = await prisma.profile.findFirst({
+      where: { OR: [{ authId: input.authId }, { email: input.email }] },
+    });
+    if (!existing) throw new Error("Could not save the profile.");
+
+    const updated = await prisma.profile.update({
+      where: { id: existing.id },
+      data: {
+        authId: input.authId,
+        phone: existing.phone || input.phone,
+      },
+    });
+
+    if (input.player) {
+      const already = await prisma.player.findFirst({
+        where: { parentId: existing.id, name: input.player.name },
+      });
+      if (!already) {
+        await prisma.player.create({
+          data: {
+            parentId: existing.id,
+            name: input.player.name,
+            ageGroup: input.player.ageGroup,
+          },
+        });
+      }
+    }
+
+    return updated;
+  }
 }

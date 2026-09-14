@@ -2,31 +2,31 @@
 
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
+import { submitCareerAction } from "@/lib/portal/actions";
+import ActionForm from "@/components/portal/ActionForm";
 import Button from "@/components/ui/Button";
-import Spinner from "@/components/ui/Spinner";
-import {
-  FileField,
-  SelectField,
-  TextAreaField,
-  TextField,
-} from "@/components/ui/FormField";
+import { SelectField, TextAreaField, TextField } from "@/components/ui/FormField";
 
 export default function CareersForm() {
   const [sent, setSent] = useState(false);
-  const [pending, setPending] = useState(false);
+
+  if (sent) {
+    return (
+      <div className="rounded-2xl border border-green-600/20 bg-green-500/5 px-5 py-6">
+        <p className="font-display text-3xl uppercase tracking-wide text-ink">Got it</p>
+        <p className="mt-2 text-sm leading-relaxed text-ink/60">
+          Your application is in the coach portal. Someone from So Smooth will reach out if it
+          is a fit.
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <form
+    <ActionForm
+      action={submitCareerAction}
       className="flex flex-col gap-5"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (pending || sent) return;
-        setPending(true);
-        window.setTimeout(() => {
-          setPending(false);
-          setSent(true);
-        }, 700);
-      }}
+      onSuccess={() => setSent(true)}
     >
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <TextField id="name" name="name" label="Full Name" required autoComplete="name" />
@@ -84,12 +84,12 @@ export default function CareersForm() {
           placeholder="@handle or url"
         />
       </div>
-      <FileField
-        id="resume"
-        name="resume"
-        label="Resume"
-        accept=".pdf,.doc,.docx"
-        hint="PDF or Word. The file stays on this page until we hook up submit."
+      <TextField
+        id="resumeUrl"
+        name="resumeUrl"
+        type="url"
+        label="Resume Link"
+        placeholder="https://"
       />
       <TextAreaField
         id="message"
@@ -100,27 +100,11 @@ export default function CareersForm() {
       />
 
       <div className="flex justify-end">
-        <Button type="submit" size="lg" pending={pending} disabled={sent}>
-          {pending ? (
-            <>
-              <Spinner className="h-4 w-4" /> Sending
-            </>
-          ) : sent ? (
-            <>
-              Received
-              <ArrowRight className="h-4 w-4" />
-            </>
-          ) : (
-            <>
-              Submit
-              <ArrowRight className="h-4 w-4" />
-            </>
-          )}
+        <Button type="submit" size="lg">
+          Submit
+          <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
-      {sent && (
-        <p className="text-sm text-green-700">Nothing is sent yet. The button is a stand-in.</p>
-      )}
-    </form>
+    </ActionForm>
   );
 }

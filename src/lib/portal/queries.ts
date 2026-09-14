@@ -10,7 +10,7 @@ export async function getOpenSlotsByCoach() {
     where: {
       status: "open",
       startsAt: { gte: start, lt: end },
-      coach: { weeklyHours: { some: {} } },
+      coach: { offersLessons: true },
     },
     select: {
       id: true,
@@ -25,7 +25,7 @@ export async function getOpenSlotsByCoach() {
 
 export function getLessonCoaches() {
   return prisma.profile.findMany({
-    where: { role: "coach", weeklyHours: { some: {} } },
+    where: { role: "coach", offersLessons: true },
     select: {
       id: true,
       name: true,
@@ -75,7 +75,7 @@ export function getParentLessonBookings(parentId: string) {
 
 export function getPublicEvents() {
   return prisma.upcomingEvent.findMany({
-    where: { endsAt: { gte: now() } },
+    where: { status: "open", endsAt: { gte: now() } },
     select: {
       id: true,
       type: true,
@@ -92,14 +92,38 @@ export function getPublicEvents() {
   });
 }
 
+const eventSignupInclude = {
+  signups: { where: { status: "booked" as const }, include: { player: true, parent: true } },
+};
+
 export function getUpcomingEvents() {
   return prisma.upcomingEvent.findMany({
     where: { endsAt: { gte: now() } },
-    include: {
-      signups: { where: { status: "booked" }, include: { player: true, parent: true } },
-    },
+    include: eventSignupInclude,
     orderBy: { startsAt: "asc" },
   });
+}
+
+export const EVENT_HISTORY_PAGE_SIZE = 8;
+
+export function getPastEventPage(page = 1) {
+  const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+  const skip = (safePage - 1) * EVENT_HISTORY_PAGE_SIZE;
+  return Promise.all([
+    prisma.upcomingEvent.findMany({
+      where: { endsAt: { lt: now() } },
+      include: eventSignupInclude,
+      orderBy: { startsAt: "desc" },
+      skip,
+      take: EVENT_HISTORY_PAGE_SIZE,
+    }),
+    prisma.upcomingEvent.count({ where: { endsAt: { lt: now() } } }),
+  ]).then(([items, total]) => ({
+    items,
+    total,
+    page: safePage,
+    pageCount: Math.max(1, Math.ceil(total / EVENT_HISTORY_PAGE_SIZE)),
+  }));
 }
 
 export function getParentEventSignups(parentId: string) {
@@ -112,6 +136,26 @@ export function getParentEventSignups(parentId: string) {
     include: { player: true, event: true },
     orderBy: { event: { startsAt: "asc" } },
   });
+}
+
+export const CAREER_PAGE_SIZE = 8;
+
+export function getCareerSubmissionPage(page = 1) {
+  const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+  const skip = (safePage - 1) * CAREER_PAGE_SIZE;
+  return Promise.all([
+    prisma.careerSubmission.findMany({
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: CAREER_PAGE_SIZE,
+    }),
+    prisma.careerSubmission.count(),
+  ]).then(([items, total]) => ({
+    items,
+    total,
+    page: safePage,
+    pageCount: Math.max(1, Math.ceil(total / CAREER_PAGE_SIZE)),
+  }));
 }
 
 export async function getYearCalendarEvents(from: Date, to: Date): Promise<CalendarMark[]> {
@@ -133,7 +177,7 @@ export async function getYearCalendarEvents(from: Date, to: Date): Promise<Calen
       orderBy: { startsAt: "asc" },
     }),
     prisma.upcomingEvent.findMany({
-      where: overlap,
+      where: { ...overlap, status: "open" },
       select: {
         id: true,
         type: true,

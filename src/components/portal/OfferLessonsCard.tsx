@@ -1,19 +1,17 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import ActionForm from "@/components/portal/ActionForm";
 import Button from "@/components/ui/Button";
-import { stopOfferingLessonsAction } from "@/lib/portal/actions";
+import { setOffersLessonsAction } from "@/lib/portal/actions";
 
 export default function OfferLessonsCard({
-  offering: savedOffering,
+  offering,
   children,
 }: {
   offering: boolean;
   children: ReactNode;
 }) {
-  const [offering, setOffering] = useState(savedOffering);
-
   if (!offering) {
     return (
       <div className="rounded-3xl border border-ink/10 bg-white p-6 sm:p-8">
@@ -25,11 +23,10 @@ export default function OfferLessonsCard({
           see you on the Private Lessons page. If you want to take 1-on-1
           bookings, turn this on and you can set your weekly times.
         </p>
-        <div className="mt-6">
-          <Button type="button" onClick={() => setOffering(true)}>
-            Offer private lessons
-          </Button>
-        </div>
+        <ActionForm action={setOffersLessonsAction} className="mt-6">
+          <input type="hidden" name="offersLessons" value="on" />
+          <Button type="submit">Offer private lessons</Button>
+        </ActionForm>
       </div>
     );
   }
@@ -40,30 +37,24 @@ export default function OfferLessonsCard({
         <div>
           <p className="text-sm font-semibold text-ink">You are offering private lessons</p>
           <p className="mt-1 text-sm text-ink/55">
-            {savedOffering
-              ? "Families can see you on the Private Lessons page and book your open times."
-              : "Set your weekly times below. Families will see you on the Private Lessons page after you save hours."}
+            Families can see you on the Private Lessons page even if you have no
+            open times yet. Set weekly hours below when you want bookings.
           </p>
         </div>
-        {savedOffering ? (
-          <ActionForm
-            action={stopOfferingLessonsAction}
-            confirm={{
-              title: "Stop offering lessons?",
-              message:
-                "You will come off the Private Lessons page and your open times will be removed. Booked lessons stay on your schedule.",
-              confirmLabel: "Stop Offering",
-            }}
-          >
-            <Button type="submit" variant="onLight" size="sm">
-              Stop offering
-            </Button>
-          </ActionForm>
-        ) : (
-          <Button type="button" variant="onLight" size="sm" onClick={() => setOffering(false)}>
-            Not now
+        <ActionForm
+          action={setOffersLessonsAction}
+          confirm={{
+            title: "Stop offering lessons?",
+            message:
+              "You will come off the Private Lessons page and open times will be removed. Your saved hours stay so you can turn this back on.",
+            confirmLabel: "Stop Offering",
+          }}
+        >
+          <input type="hidden" name="offersLessons" value="off" />
+          <Button type="submit" variant="onLight" size="sm">
+            Stop offering
           </Button>
-        )}
+        </ActionForm>
       </div>
       {children}
     </>

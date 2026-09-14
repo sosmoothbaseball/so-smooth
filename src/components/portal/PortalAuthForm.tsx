@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { loginAction, signupAction } from "@/lib/portal/actions";
 import { passwordMeetsRules, PASSWORD_RULES_MESSAGE } from "@/lib/portal/password";
@@ -146,6 +147,13 @@ export default function PortalAuthForm({ initialError = "" }: { initialError?: s
             "Create Account"
           )}
         </Button>
+        {mode === "login" ? (
+          <p className="text-center text-sm text-ink/60">
+            <Link href="/portal/forgot" className="font-semibold text-green-700 hover:text-green-800">
+              Forgot password?
+            </Link>
+          </p>
+        ) : null}
       </form>
 
       <p className="mt-6 text-center text-sm text-ink/60">

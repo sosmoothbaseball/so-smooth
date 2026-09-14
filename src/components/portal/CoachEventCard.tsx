@@ -9,7 +9,7 @@ import {
   removeUpcomingEventAction,
   updateUpcomingEventAction,
 } from "@/lib/portal/actions";
-import { eventTypeLabel, formatRange, toDateTimeLocal } from "@/lib/portal/dates";
+import { eventCancelMailto, eventTypeLabel, formatRange, toDateTimeLocal } from "@/lib/portal/dates";
 
 export type CoachEventCardData = {
   id: string;
@@ -21,6 +21,7 @@ export type CoachEventCardData = {
   endsAt: string;
   capacity: number;
   price: string;
+  status: string;
   signups: {
     id: string;
     playerName: string;
@@ -30,10 +31,25 @@ export type CoachEventCardData = {
   }[];
 };
 
-export default function CoachEventCard({ event }: { event: CoachEventCardData }) {
+export default function CoachEventCard({
+  event,
+  past = false,
+}: {
+  event: CoachEventCardData;
+  past?: boolean;
+}) {
   const [editing, setEditing] = useState(false);
   const startsAt = new Date(event.startsAt);
   const endsAt = new Date(event.endsAt);
+  const cancelled = event.status === "cancelled";
+  const badge = cancelled ? "Cancelled" : past ? "Ended" : eventTypeLabel(event.type);
+  const familyMail = eventCancelMailto({
+    title: event.title,
+    startsAt,
+    endsAt,
+    location: event.location,
+    emails: event.signups.map((signup) => signup.parentEmail),
+  });
 
   if (editing) {
     return (
@@ -124,9 +140,21 @@ export default function CoachEventCard({ event }: { event: CoachEventCardData })
   }
 
   return (
-    <li className="rounded-2xl border border-ink/10 px-4 py-4">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-green-700">
-        {eventTypeLabel(event.type)}
+    <li
+      className={
+        cancelled
+          ? "rounded-2xl border border-red-200 bg-red-50/70 px-4 py-4"
+          : "rounded-2xl border border-ink/10 px-4 py-4"
+      }
+    >
+      <p
+        className={
+          cancelled
+            ? "text-[10px] font-semibold uppercase tracking-[0.18em] text-red-700"
+            : "text-[10px] font-semibold uppercase tracking-[0.18em] text-green-700"
+        }
+      >
+        {badge}
       </p>
       <p className="mt-1 font-display text-2xl uppercase tracking-wide text-ink">{event.title}</p>
       <p className="mt-2 text-sm text-ink/60">{formatRange(startsAt, endsAt)}</p>
@@ -134,6 +162,12 @@ export default function CoachEventCard({ event }: { event: CoachEventCardData })
       <p className="mt-1 text-sm text-ink/50">
         {event.price} · {event.signups.length}/{event.capacity} booked
       </p>
+      {cancelled && !past ? (
+        <p className="mt-3 text-sm text-ink/65">
+          Off the public list. Families still see this as cancelled in their portal. Email them so
+          they hear it before they log in.
+        </p>
+      ) : null}
       {event.signups.length > 0 && (
         <ul className="mt-3 space-y-1 text-sm text-ink/70">
           {event.signups.map((signup) => (
@@ -157,41 +191,60 @@ export default function CoachEventCard({ event }: { event: CoachEventCardData })
                   ) : null}
                 </span>
               </span>
-              <ActionForm
-                action={cancelEventSignupAction}
-                confirm={{
-                  title: "Cancel this booking?",
-                  message: "Are you sure you want to cancel this event booking? The spot will open back up.",
-                  confirmLabel: "Cancel Booking",
-                }}
-              >
-                <input type="hidden" name="signupId" value={signup.id} />
-                <Button type="submit" variant="onLight" size="sm">
-                  Cancel
-                </Button>
-              </ActionForm>
+              {cancelled || past ? null : (
+                <ActionForm
+                  action={cancelEventSignupAction}
+                  confirm={{
+                    title: "Cancel this booking?",
+                    message: "Are you sure you want to cancel this event booking? The spot will open back up.",
+                    confirmLabel: "Cancel Booking",
+                  }}
+                >
+                  <input type="hidden" name="signupId" value={signup.id} />
+                  <Button type="submit" variant="onLight" size="sm">
+                    Cancel
+                  </Button>
+                </ActionForm>
+              )}
             </li>
           ))}
         </ul>
       )}
+      {past ? null : (
       <div className="mt-4 flex flex-wrap gap-2">
-        <Button type="button" size="sm" onClick={() => setEditing(true)}>
-          Edit Event
-        </Button>
-        <ActionForm
-          action={removeUpcomingEventAction}
-          confirm={{
-            title: "Remove this event?",
-            message: "Are you sure you want to remove this event? Signups for it will be dropped.",
-            confirmLabel: "Remove Event",
-          }}
-        >
-          <input type="hidden" name="eventId" value={event.id} />
-          <Button type="submit" variant="onLight" size="sm">
-            Remove Event
-          </Button>
-        </ActionForm>
+        {cancelled ? (
+          familyMail ? (
+            <Button href={familyMail} size="sm" external>
+              Email Booked Families
+            </Button>
+          ) : (
+            <p className="text-xs text-ink/45">No family emails on these signups.</p>
+          )
+        ) : (
+          <>
+            <Button type="button" size="sm" onClick={() => setEditing(true)}>
+              Edit Event
+            </Button>
+            <ActionForm
+              action={removeUpcomingEventAction}
+              confirm={{
+                title: "Remove this event?",
+                message:
+                  event.signups.length > 0
+                    ? `Are you sure? The listing comes down and ${event.signups.length} booked ${event.signups.length === 1 ? "family stays" : "families stay"} here so you can email them. They also see it as cancelled in their portal.`
+                    : "Are you sure you want to remove this event?",
+                confirmLabel: "Remove Event",
+              }}
+            >
+              <input type="hidden" name="eventId" value={event.id} />
+              <Button type="submit" variant="onLight" size="sm">
+                Remove Event
+              </Button>
+            </ActionForm>
+          </>
+        )}
       </div>
+      )}
     </li>
   );
 }

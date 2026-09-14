@@ -13,8 +13,9 @@ model Profile {
   email     String   @unique
   name      String
   phone     String   @default("")
+  offersLessons Boolean @default(false)
   role      String   @default("parent")
-  password  String
+  password  String   @default("")
   authId    String?  @unique
   createdAt DateTime @default(now())
 
@@ -96,6 +97,7 @@ model UpcomingEvent {
   endsAt      DateTime
   capacity    Int
   price       String   @default("$75")
+  status      String   @default("open")
   createdById String
   createdBy   Profile  @relation(fields: [createdById], references: [id], onDelete: Cascade)
   signups     EventSignup[]
@@ -113,6 +115,21 @@ model EventSignup {
   createdAt DateTime      @default(now())
 
   @@unique([eventId, playerId])
+}
+
+model CareerSubmission {
+  id           String   @id @default(cuid())
+  name         String
+  email        String
+  phone        String   @default("")
+  city         String   @default("")
+  role         String
+  availability String   @default("")
+  experience   String   @default("")
+  instagram    String   @default("")
+  resumeUrl    String   @default("")
+  message      String
+  createdAt    DateTime @default(now())
 }
 
 model CalendarEvent {

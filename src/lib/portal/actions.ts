@@ -6,11 +6,11 @@ import { prisma } from "@/lib/portal/prisma";
 import {
   clearSession,
   getSession,
+  ensureParentProfile,
   linkAuthUser,
   portalHome,
   requireCoach,
   requireParent,
-  setSession,
 } from "@/lib/portal/auth";
 import { now } from "@/lib/portal/time";
 import { parseLessonMinutes, parseTimeToMinutes } from "@/lib/portal/hours";
@@ -20,6 +20,8 @@ import {
   syncCoachLessonSlots,
 } from "@/lib/portal/availability";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { AUTH_UNAVAILABLE } from "@/lib/supabase/config";
+import { appOrigin } from "@/lib/supabase/origin";
 import {
   ClaimFailed,
   claimEventSpot,
@@ -28,7 +30,9 @@ import {
   readLessonSlotState,
 } from "@/lib/portal/booking";
 import { passwordMeetsRules, PASSWORD_RULES_MESSAGE } from "@/lib/portal/password";
+import { clearPasswordResetSession, hasPasswordResetSession } from "@/lib/portal/password-reset";
 import { normalizePhone, phoneLooksValid, PHONE_REQUIRED_MESSAGE } from "@/lib/portal/phone";
+import { careerRecentlySent, CAREER_WAIT_MS, markCareerSent } from "@/lib/portal/career-limit";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -69,6 +73,11 @@ function refreshProfiles() {
   revalidatePath("/lessons");
 }
 
+function refreshCareers() {
+  revalidatePath("/portal/coach/careers");
+  revalidatePath("/careers");
+}
+
 
 export async function loginAction(formData: FormData): Promise<ActionResult> {
   const email = String(formData.get("email") || "")
@@ -76,24 +85,13 @@ export async function loginAction(formData: FormData): Promise<ActionResult> {
     .toLowerCase();
   const password = String(formData.get("password") || "");
   const supabase = await createSupabaseServer();
-  if (supabase) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error || !data.user) return fail("Incorrect password");
-    const profile = await linkAuthUser(data.user);
-    if (!profile) return fail("Incorrect password");
-    redirect(portalHome(profile.role));
-  }
-  let user;
-  try {
-    user = await prisma.profile.findUnique({ where: { email } });
-  } catch {
-    return fail("Incorrect password");
-  }
-  if (!user || !user.password || user.password !== password) {
-    return fail("Incorrect password");
-  }
-  await setSession(user.id);
-  redirect(portalHome(user.role));
+  if (!supabase) return fail(AUTH_UNAVAILABLE);
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error || !data.user) return fail("Incorrect password");
+  const profile = await linkAuthUser(data.user);
+  if (!profile) return fail("Incorrect password");
+  redirect(portalHome(profile.role));
 }
 
 export async function signupAction(formData: FormData): Promise<ActionResult> {
@@ -125,46 +123,34 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
   }
 
   const supabase = await createSupabaseServer();
-  if (supabase) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { name, phone } },
-    });
-    if (error) return fail(error.message);
-    if (!data.user) {
-      return fail("Check your email to confirm the account, then sign in.");
-    }
-    await prisma.profile.create({
-      data: {
-        name,
-        email,
-        phone,
-        password: "",
-        authId: data.user.id,
-        role: "parent",
-      },
-    });
-    if (!data.session) {
-      const signedIn = await supabase.auth.signInWithPassword({ email, password });
-      if (signedIn.error) {
-        return fail("Account created. Confirm the email, then sign in.");
-      }
-    }
-    redirect(portalHome("parent"));
-  }
+  if (!supabase) return fail(AUTH_UNAVAILABLE);
 
-  const user = await prisma.profile.create({
-    data: {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { name, phone } },
+  });
+  if (error) return fail(error.message);
+  if (!data.user) {
+    return fail("Check your email to confirm the account, then sign in.");
+  }
+  try {
+    await ensureParentProfile({
+      authId: data.user.id,
       name,
       email,
       phone,
-      password,
-      role: "parent",
-    },
-  });
-  await setSession(user.id);
-  redirect(portalHome(user.role));
+    });
+  } catch {
+    return fail("Account started. Sign in and we will finish setting up your profile.");
+  }
+  if (!data.session) {
+    const signedIn = await supabase.auth.signInWithPassword({ email, password });
+    if (signedIn.error) {
+      return fail("Account created. Confirm the email, then sign in.");
+    }
+  }
+  redirect(portalHome("parent"));
 }
 
 export async function logoutAction() {
@@ -172,16 +158,69 @@ export async function logoutAction() {
   redirect("/portal");
 }
 
-export async function stopOfferingLessonsAction(): Promise<ActionResult> {
+export async function requestPasswordResetAction(formData: FormData): Promise<ActionResult> {
+  const supabase = await createSupabaseServer();
+  if (!supabase) return fail(AUTH_UNAVAILABLE);
+
+  const email = String(formData.get("email") || "")
+    .trim()
+    .toLowerCase();
+  if (!email) return fail("Enter the email for your account.");
+
+  const origin = await appOrigin();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/callback?next=/portal/update-password`,
+  });
+  if (error) return fail(error.message);
+  return ok();
+}
+
+export async function updatePasswordAfterResetAction(formData: FormData): Promise<ActionResult> {
+  const user = await getSession();
+  if (!user || !(await hasPasswordResetSession())) {
+    return fail("Use the reset link from your email first.");
+  }
+
+  const newPassword = String(formData.get("newPassword") || "");
+  const confirmPassword = String(formData.get("confirmPassword") || "");
+  if (!newPassword || !confirmPassword) return fail("Enter the new password twice.");
+  if (newPassword !== confirmPassword) return fail("The new passwords do not match.");
+  if (!passwordMeetsRules(newPassword)) return fail(PASSWORD_RULES_MESSAGE);
+
+  const supabase = await createSupabaseServer();
+  if (!supabase) return fail(AUTH_UNAVAILABLE);
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) return fail(error.message);
+
+  await clearPasswordResetSession();
+  refreshProfiles();
+  return ok();
+}
+
+export async function setOffersLessonsAction(formData: FormData): Promise<ActionResult> {
   const coach = await requireCoach();
-  await replaceWeeklyHours(coach.id, []);
-  await clearUnbookedLessonSlots(coach.id);
+  const offersLessons = String(formData.get("offersLessons") || "") === "on";
+
+  await prisma.profile.update({
+    where: { id: coach.id },
+    data: { offersLessons },
+  });
+
+  if (offersLessons) {
+    await syncCoachLessonSlots(coach.id, { replaceOpen: true });
+  } else {
+    await clearUnbookedLessonSlots(coach.id);
+  }
+
   refreshLessons();
   return ok();
 }
 
 export async function saveWeeklyHoursAction(formData: FormData): Promise<ActionResult> {
   const coach = await requireCoach();
+  if (!coach.offersLessons) {
+    return fail("Turn on private lessons first, then you can set weekly hours.");
+  }
   const duration = parseLessonMinutes();
   const rules: { weekday: number; startMinutes: number; endMinutes: number }[] = [];
 
@@ -290,27 +329,15 @@ export async function loginForBookingAction(formData: FormData) {
   const password = String(formData.get("password") || "");
   const slotId = String(formData.get("slotId") || "");
   const supabase = await createSupabaseServer();
-  if (supabase) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error || !data.user) {
-      return { ok: false, error: "Incorrect password" };
-    }
-    const profile = await linkAuthUser(data.user);
-    if (!profile) return { ok: false, error: "Incorrect password" };
-    if (profile.role === "coach") redirect("/portal/coach");
-    redirect(slotId ? `/lessons?book=${slotId}` : "/lessons");
-  }
-  const user = await prisma.profile.findUnique({
-    where: { email },
-    include: { players: true },
-  });
-  if (!user || !user.password || user.password !== password) {
+  if (!supabase) return { ok: false, error: AUTH_UNAVAILABLE };
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error || !data.user) {
     return { ok: false, error: "Incorrect password" };
   }
-  await setSession(user.id);
-  if (user.role === "coach") {
-    redirect("/portal/coach");
-  }
+  const profile = await linkAuthUser(data.user);
+  if (!profile) return { ok: false, error: "Incorrect password" };
+  if (profile.role === "coach") redirect("/portal/coach");
   redirect(slotId ? `/lessons?book=${slotId}` : "/lessons");
 }
 
@@ -344,47 +371,34 @@ export async function createParentForBookingAction(formData: FormData) {
   }
 
   const supabase = await createSupabaseServer();
-  if (supabase) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { name, phone } },
-    });
-    if (error) return { ok: false, error: error.message };
-    if (!data.user) {
-      return { ok: false, error: "Check your email to confirm the account, then sign in." };
-    }
-    await prisma.profile.create({
-      data: {
-        name,
-        email,
-        phone,
-        password: "",
-        authId: data.user.id,
-        role: "parent",
-        players: { create: { name: playerName, ageGroup } },
-      },
-    });
-    if (!data.session) {
-      const signedIn = await supabase.auth.signInWithPassword({ email, password });
-      if (signedIn.error) {
-        return { ok: false, error: "Account created. Confirm the email, then sign in." };
-      }
-    }
-    redirect(slotId ? `/lessons?book=${slotId}` : "/lessons");
-  }
+  if (!supabase) return { ok: false, error: AUTH_UNAVAILABLE };
 
-  const user = await prisma.profile.create({
-    data: {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { name, phone } },
+  });
+  if (error) return { ok: false, error: error.message };
+  if (!data.user) {
+    return { ok: false, error: "Check your email to confirm the account, then sign in." };
+  }
+  try {
+    await ensureParentProfile({
+      authId: data.user.id,
       name,
       email,
       phone,
-      password,
-      role: "parent",
-      players: { create: { name: playerName, ageGroup } },
-    },
-  });
-  await setSession(user.id);
+      player: { name: playerName, ageGroup },
+    });
+  } catch {
+    return { ok: false, error: "Account started. Sign in and we will finish setting up your profile." };
+  }
+  if (!data.session) {
+    const signedIn = await supabase.auth.signInWithPassword({ email, password });
+    if (signedIn.error) {
+      return { ok: false, error: "Account created. Confirm the email, then sign in." };
+    }
+  }
   redirect(slotId ? `/lessons?book=${slotId}` : "/lessons");
 }
 
@@ -427,7 +441,7 @@ export async function cancelLessonBookingAction(formData: FormData): Promise<Act
   const bookingId = String(formData.get("bookingId") || "");
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    include: { slot: true },
+    include: { slot: { include: { coach: { select: { offersLessons: true } } } } },
   });
   if (!booking || booking.status !== "booked") return fail("That booking is already gone.");
   if (user.role === "coach" && booking.slot.coachId !== user.id) {
@@ -438,11 +452,12 @@ export async function cancelLessonBookingAction(formData: FormData): Promise<Act
   }
 
   const stillUpcoming = booking.slot.startsAt > now();
+  const canReopen = stillUpcoming && booking.slot.coach.offersLessons;
   await prisma.$transaction([
     prisma.booking.update({ where: { id: bookingId }, data: { status: "cancelled" } }),
     prisma.lessonSlot.update({
       where: { id: booking.slotId },
-      data: { status: stillUpcoming ? "open" : "closed" },
+      data: { status: canReopen ? "open" : stillUpcoming ? "blocked" : "closed" },
     }),
   ]);
   refreshLessons();
@@ -517,7 +532,9 @@ export async function updateUpcomingEventAction(formData: FormData): Promise<Act
     where: { id },
     include: { _count: { select: { signups: { where: { status: "booked" } } } } },
   });
-  if (!existing) return fail("That event is already gone.");
+  if (!existing || existing.status === "cancelled") {
+    return fail("That event is already gone.");
+  }
 
   const startChanged = fields.startsAt
     ? fields.startsAt.getTime() !== existing.startsAt.getTime()
@@ -549,8 +566,20 @@ export async function updateUpcomingEventAction(formData: FormData): Promise<Act
 export async function removeUpcomingEventAction(formData: FormData): Promise<ActionResult> {
   await requireCoach();
   const id = String(formData.get("eventId") || "");
-  const result = await prisma.upcomingEvent.deleteMany({ where: { id } });
-  if (result.count === 0) return fail("That event is already gone.");
+  const event = await prisma.upcomingEvent.findUnique({
+    where: { id },
+    include: { _count: { select: { signups: { where: { status: "booked" } } } } },
+  });
+  if (!event || event.status === "cancelled") return fail("That event is already gone.");
+
+  if (event._count.signups === 0) {
+    await prisma.upcomingEvent.delete({ where: { id } });
+  } else {
+    await prisma.upcomingEvent.update({
+      where: { id },
+      data: { status: "cancelled" },
+    });
+  }
   refreshEvents();
   return ok();
 }
@@ -573,16 +602,19 @@ export async function bookEventAction(formData: FormData): Promise<ActionResult>
   if (!player) return fail("Pick a player on your account.");
 
   try {
-    await prisma.$transaction(async (tx) => {
-      await claimEventSpot(tx, { eventId, parentId: user.id, playerId: player.id });
-    });
+    await prisma.$transaction(
+      async (tx) => {
+        await claimEventSpot(tx, { eventId, parentId: user.id, playerId: player.id });
+      },
+      { isolationLevel: "Serializable" },
+    );
   } catch (error) {
     const code = error instanceof ClaimFailed ? error.code : "";
     if (code === "started") return fail("That event already started.");
     if (code === "already") return fail("That player is already on this event.");
     if (code === "full") return fail("That event just filled up.");
     if (code === "gone") return fail("That event is no longer listed.");
-    return fail("Could not book that event.");
+    return fail("That event just filled up. Refresh and pick another if needed.");
   }
 
   refreshEvents();
@@ -733,22 +765,16 @@ export async function changePasswordAction(formData: FormData): Promise<ActionRe
   if (newPassword === currentPassword) return fail("Pick a new password that is different.");
 
   const supabase = await createSupabaseServer();
-  if (supabase) {
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: user.email,
-      password: currentPassword,
-    });
-    if (signInError) return fail("That current password is not right.");
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) return fail(error.message);
-  } else if (!user.password || user.password !== currentPassword) {
-    return fail("That current password is not right.");
-  }
+  if (!supabase) return fail(AUTH_UNAVAILABLE);
 
-  await prisma.profile.update({
-    where: { id: user.id },
-    data: { password: supabase ? "" : newPassword },
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: currentPassword,
   });
+  if (signInError) return fail("That current password is not right.");
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) return fail(error.message);
+
   refreshProfiles();
   return ok();
 }
@@ -777,5 +803,115 @@ export async function updatePlayerAction(formData: FormData): Promise<ActionResu
   });
   if (result.count === 0) return fail("That player is not on your account.");
   refreshProfiles();
+  return ok();
+}
+
+export async function removePlayerAction(formData: FormData): Promise<ActionResult> {
+  const parent = await requireParent();
+  const playerId = String(formData.get("playerId") || "");
+  if (!playerId) return fail("That player is already gone.");
+
+  const player = await prisma.player.findFirst({
+    where: { id: playerId, parentId: parent.id },
+    select: { id: true },
+  });
+  if (!player) return fail("That player is not on your account.");
+
+  const [lessons, events] = await Promise.all([
+    prisma.booking.count({
+      where: {
+        playerId,
+        status: "booked",
+        slot: { startsAt: { gte: now() } },
+      },
+    }),
+    prisma.eventSignup.count({
+      where: {
+        playerId,
+        status: "booked",
+        event: { status: "open", endsAt: { gte: now() } },
+      },
+    }),
+  ]);
+  if (lessons || events) {
+    return fail("Cancel their upcoming bookings first, then you can remove this player.");
+  }
+
+  await prisma.player.delete({ where: { id: playerId } });
+  refreshProfiles();
+  revalidatePath("/portal/parent");
+  return ok();
+}
+
+const CAREER_ROLES = new Set([
+  "hitting",
+  "pitching",
+  "catching",
+  "infield",
+  "outfield",
+  "operations",
+  "other",
+]);
+
+export async function submitCareerAction(formData: FormData): Promise<ActionResult> {
+  const name = String(formData.get("name") || "").trim();
+  const email = String(formData.get("email") || "")
+    .trim()
+    .toLowerCase();
+  const phone = String(formData.get("phone") || "").trim();
+  const city = String(formData.get("city") || "").trim();
+  const role = String(formData.get("role") || "").trim();
+  const availability = String(formData.get("availability") || "").trim();
+  const experience = String(formData.get("experience") || "").trim();
+  const instagram = String(formData.get("instagram") || "").trim();
+  const resumeUrl = String(formData.get("resumeUrl") || "").trim();
+  const message = String(formData.get("message") || "").trim();
+
+  if (!name || !email || !role || !message) {
+    return fail("Name, email, role, and a short note are required.");
+  }
+  if (!email.includes("@")) return fail("Enter a valid email.");
+  if (!CAREER_ROLES.has(role)) return fail("Pick the role you are interested in.");
+  if (message.length > 4000) return fail("Keep the note under 4,000 characters.");
+  if (resumeUrl && !/^https?:\/\//i.test(resumeUrl)) {
+    return fail("Resume should be a full link, like https://...");
+  }
+  if (await careerRecentlySent()) {
+    return fail("You already sent an application in the last 30 minutes. Try again later.");
+  }
+  const recent = await prisma.careerSubmission.findFirst({
+    where: { email, createdAt: { gte: new Date(Date.now() - CAREER_WAIT_MS) } },
+    select: { id: true },
+  });
+  if (recent) {
+    return fail("You already sent an application in the last 30 minutes. Try again later.");
+  }
+
+  await prisma.careerSubmission.create({
+    data: {
+      name,
+      email,
+      phone,
+      city,
+      role,
+      availability,
+      experience,
+      instagram,
+      resumeUrl,
+      message,
+    },
+  });
+  await markCareerSent();
+  refreshCareers();
+  return ok();
+}
+
+export async function deleteCareerSubmissionAction(formData: FormData): Promise<ActionResult> {
+  await requireCoach();
+  const id = String(formData.get("submissionId") || "");
+  if (!id) return fail("That application is already gone.");
+  const result = await prisma.careerSubmission.deleteMany({ where: { id } });
+  if (result.count === 0) return fail("That application is already gone.");
+  refreshCareers();
   return ok();
 }

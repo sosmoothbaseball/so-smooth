@@ -4,13 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma migrate deploy && prisma generate && next build",
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
     "db:push": "prisma db push",
+    "db:migrate": "prisma migrate deploy",
+    "db:migrate:status": "prisma migrate status",
     "db:seed": "node prisma/seed.js",
-    "db:reset": "prisma db push --force-reset && node prisma/seed.js"
+    "db:reset": "node -e \"if(process.env.ALLOW_DB_SEED!=='true'){console.error('Refusing db:reset. This wipes the database.');process.exit(1)}\" && prisma db push --force-reset && node prisma/seed.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

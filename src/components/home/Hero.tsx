@@ -20,14 +20,14 @@ export default function Hero() {
   return (
     <section className="relative isolate flex h-svh min-h-[36rem] flex-col overflow-hidden bg-ink pt-24 pb-6 sm:pt-28">
       <Image
-        src="/brand/home-hero.jpg"
+        src="/brand/home-hero-lockers.jpg"
         alt="So Smooth jerseys in the locker room"
         fill
         priority
         sizes="100vw"
-        className="z-0 object-contain object-center"
+        className="z-0 object-cover object-center"
       />
-      <div className="absolute inset-0 z-0 bg-gradient-to-b from-ink/25 via-ink/10 to-ink/70" />
+      <div className="absolute inset-0 z-0 bg-gradient-to-b from-ink/45 via-ink/25 to-ink/75" />
 
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center px-6 text-center">
         <h1 className="font-display text-5xl uppercase leading-[0.95] tracking-wide text-bone drop-shadow-[0_2px_16px_rgba(0,0,0,0.65)] sm:text-7xl md:text-8xl">
