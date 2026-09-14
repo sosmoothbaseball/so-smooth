@@ -7,7 +7,7 @@ import Button from "@/components/ui/Button";
 
 const HEADLINE_LINES = [
   [{ text: "WHERE ", accent: false }, { text: "FUTURE STARS", accent: true }],
-  [{ text: "LEARN TO ", accent: false }, { text: "COMPETE", accent: "yellow" as const }],
+  [{ text: "LEARN TO ", accent: false }, { text: "SHINE", accent: "yellow" as const }],
 ];
 
 const STATS = [
@@ -26,7 +26,7 @@ export default function Hero() {
         priority
         quality={95}
         sizes="100vw"
-        className="z-0 object-cover object-center"
+        className="z-0 object-contain object-center"
       />
       <div className="absolute inset-0 z-0 bg-gradient-to-b from-ink/55 via-ink/20 to-ink/80" />
 
