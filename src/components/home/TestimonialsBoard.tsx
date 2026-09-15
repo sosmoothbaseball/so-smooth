@@ -5,12 +5,10 @@ import { useRouter } from "next/navigation";
 import { Quote, Star, X } from "lucide-react";
 import { submitTestimonialAction } from "@/lib/portal/actions";
 import { AGE_GROUPS } from "@/lib/portal/age-groups";
-import {
-  TESTIMONIAL_QUOTE_MAX,
-  TESTIMONIAL_QUOTE_MIN,
-  TESTIMONIAL_RETURN_TO,
-} from "@/lib/portal/testimonials";
+import { TESTIMONIAL_QUOTE_MAX, TESTIMONIAL_QUOTE_MIN } from "@/lib/portal/testimonials";
+import { setResumeAuth, takeResumeAuthIf } from "@/lib/portal/resume-auth";
 import ActionForm from "@/components/portal/ActionForm";
+import AuthDialog from "@/components/portal/AuthDialog";
 import Button from "@/components/ui/Button";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/FormField";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -39,28 +37,41 @@ export default function TestimonialsBoard({
 }) {
   const router = useRouter();
   const titleId = useId();
-  const [open, setOpen] = useState(false);
-  const [sent, setSent] = useState(false);
-  const loginHref = `/portal?next=${encodeURIComponent(TESTIMONIAL_RETURN_TO)}`;
+  const [storyOpen, setStoryOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+
+  useEffect(() => {
+    if (viewer.kind !== "parent") return;
+    if (takeResumeAuthIf("testimonial")) setStoryOpen(true);
+  }, [viewer.kind]);
 
   useEffect(() => {
     if (!openSubmit) return;
     document.getElementById("testimonials")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    if (viewer.kind !== "coach") setOpen(true);
+    if (viewer.kind === "parent") setStoryOpen(true);
+    else if (viewer.kind === "guest") setAuthOpen(true);
   }, [openSubmit, viewer.kind]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!storyOpen) return;
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") closeStory();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [storyOpen]);
 
-  function closeAndClearQuery() {
-    setOpen(false);
+  function closeStory() {
+    setStoryOpen(false);
     if (openSubmit) router.replace("/", { scroll: false });
+  }
+
+  function startShare() {
+    if (viewer.kind === "parent") {
+      setStoryOpen(true);
+      return;
+    }
+    setAuthOpen(true);
   }
 
   return (
@@ -99,26 +110,32 @@ export default function TestimonialsBoard({
         )}
 
         <div className="mt-10 flex flex-col items-center gap-3">
-          {sent ? (
-            <p className="max-w-md text-center text-sm text-ink/65">
-              Thanks — coaches have your story. It will show here if they add it to the homepage.
-            </p>
-          ) : viewer.kind === "coach" ? (
+          {viewer.kind === "coach" ? (
             <Button href="/portal/coach/testimonials" variant="onLight">
               Manage Testimonials
             </Button>
           ) : (
-            <Button type="button" variant="onLight" onClick={() => setOpen(true)}>
+            <Button type="button" variant="onLight" onClick={startShare}>
               Share Your Story
             </Button>
           )}
         </div>
       </div>
 
-      {open ? (
+      <AuthDialog
+        open={authOpen}
+        onClose={() => setAuthOpen(false)}
+        onSuccess={() => {
+          setResumeAuth({ kind: "testimonial" });
+          setAuthOpen(false);
+          router.refresh();
+        }}
+      />
+
+      {storyOpen && viewer.kind === "parent" ? (
         <div
           className="fixed inset-0 z-[90] flex items-end justify-center bg-ink/60 p-4 sm:items-center"
-          onClick={closeAndClearQuery}
+          onClick={closeStory}
         >
           <div
             role="dialog"
@@ -142,80 +159,58 @@ export default function TestimonialsBoard({
               <button
                 type="button"
                 aria-label="Close"
-                onClick={closeAndClearQuery}
+                onClick={closeStory}
                 className="rounded-full border border-ink/10 p-2 text-ink/40 transition-colors hover:border-ink/30 hover:text-ink"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            {viewer.kind === "parent" ? (
-              <>
-                <p className="mt-3 text-sm text-ink/60">
-                  Coaches review every story. It will not appear on the homepage until they pick it.
-                </p>
-                <ActionForm
-                  action={submitTestimonialAction}
-                  className="mt-6 flex flex-col gap-4"
-                  confirm={{
-                    title: "Send this story?",
-                    message:
-                      "Coaches will see it in the portal. It stays off the homepage until they add it.",
-                    confirmLabel: "Send",
-                  }}
-                  onSuccess={() => {
-                    setSent(true);
-                    closeAndClearQuery();
-                  }}
-                >
-                  <TextField
-                    id="testimonial-name"
-                    name="displayName"
-                    label="Name To Show"
-                    defaultValue={viewer.name}
-                    required
-                    maxLength={80}
-                    autoComplete="name"
-                  />
-                  <SelectField
-                    id="testimonial-age"
-                    name="ageGroup"
-                    label="Player Age Group"
-                    defaultValue={viewer.ageGroup}
-                    required
-                  >
-                    {AGE_GROUPS.map((age) => (
-                      <option key={age} value={age}>
-                        {age}
-                      </option>
-                    ))}
-                  </SelectField>
-                  <TextAreaField
-                    id="testimonial-quote"
-                    name="quote"
-                    label="Your Story"
-                    required
-                    minLength={TESTIMONIAL_QUOTE_MIN}
-                    maxLength={TESTIMONIAL_QUOTE_MAX}
-                    placeholder="What has So Smooth meant for your player?"
-                  />
-                  <p className="text-xs text-ink/40">
-                    {TESTIMONIAL_QUOTE_MIN}–{TESTIMONIAL_QUOTE_MAX} characters.
-                  </p>
-                  <Button type="submit">Submit Story</Button>
-                </ActionForm>
-              </>
-            ) : (
-              <>
-                <p className="mt-3 text-sm text-ink/60">
-                  Sign in with a family account to share a story. After you sign in, this form opens
-                  again.
-                </p>
-                <div className="mt-6">
-                  <Button href={loginHref}>Sign In</Button>
-                </div>
-              </>
-            )}
+            <ActionForm
+              action={submitTestimonialAction}
+              className="mt-6 flex flex-col gap-4"
+              confirm={{
+                title: "Send this story?",
+                confirmLabel: "Send",
+              }}
+              onSuccess={closeStory}
+            >
+              <TextField
+                id="testimonial-name"
+                name="displayName"
+                label="Name To Show"
+                defaultValue={viewer.name}
+                required
+                maxLength={80}
+                autoComplete="name"
+              />
+              <SelectField
+                id="testimonial-age"
+                name="ageGroup"
+                label="Player Age Group"
+                defaultValue={viewer.ageGroup}
+                required
+              >
+                {AGE_GROUPS.map((age) => (
+                  <option key={age} value={age}>
+                    {age}
+                  </option>
+                ))}
+              </SelectField>
+              <TextAreaField
+                id="testimonial-quote"
+                name="quote"
+                label="Your Story"
+                required
+                minLength={TESTIMONIAL_QUOTE_MIN}
+                maxLength={TESTIMONIAL_QUOTE_MAX}
+                placeholder="What has So Smooth meant for your player?"
+              />
+              <p className="text-xs text-ink/40">
+                {TESTIMONIAL_QUOTE_MIN}–{TESTIMONIAL_QUOTE_MAX} characters.
+              </p>
+              <Button type="submit">Submit Story</Button>
+            </ActionForm>
           </div>
         </div>
       ) : null}

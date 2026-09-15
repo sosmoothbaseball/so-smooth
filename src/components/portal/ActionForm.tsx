@@ -8,7 +8,7 @@ import Spinner from "@/components/ui/Spinner";
 
 export type ConfirmCopy = {
   title?: string;
-  message: string;
+  message?: string;
   confirmLabel?: string;
   cancelLabel?: string;
 };

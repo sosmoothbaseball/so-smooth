@@ -15,7 +15,7 @@ export default function ConfirmDialog({
 }: {
   open: boolean;
   title?: string;
-  message: string;
+  message?: string;
   confirmLabel?: string;
   cancelLabel?: string;
   pending?: boolean;
@@ -37,7 +37,7 @@ export default function ConfirmDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[90] flex items-end justify-center bg-ink/60 p-4 sm:items-center"
+      className="fixed inset-0 z-[100] flex items-end justify-center bg-ink/60 p-4 sm:items-center"
       onClick={() => {
         if (!pending) onCancel();
       }}
@@ -58,7 +58,7 @@ export default function ConfirmDialog({
         >
           {title}
         </h3>
-        <p className="mt-3 text-sm text-ink/60">{message}</p>
+        {message ? <p className="mt-3 text-sm text-ink/60">{message}</p> : null}
         <div className="mt-6 flex flex-wrap gap-2">
           <Button type="button" onClick={onConfirm} disabled={pending}>
             {pending ? "Working…" : confirmLabel}

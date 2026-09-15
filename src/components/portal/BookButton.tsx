@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { checkEventSpotAction, type ActionResult } from "@/lib/portal/actions";
+import { peekResumeAuth, setResumeAuth, takeResumeAuthIf } from "@/lib/portal/resume-auth";
+import AuthDialog from "@/components/portal/AuthDialog";
 import Button from "@/components/ui/Button";
 import Spinner from "@/components/ui/Spinner";
 import BookingConfirmed from "@/components/portal/BookingConfirmed";
@@ -35,6 +37,22 @@ export default function BookButton({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [queued, setQueued] = useState<FormData | null>(null);
   const [confirmed, setConfirmed] = useState<{ title: string; detail?: string } | null>(null);
+  const [authOpen, setAuthOpen] = useState(false);
+  const eventId = hiddenFields.eventId;
+  const playerId = user?.players[0]?.id;
+  const canResume = Boolean(user && user.role === "parent" && playerId);
+
+  useEffect(() => {
+    if (!canResume || !eventId || !playerId) return;
+    const resume = peekResumeAuth();
+    if (resume?.kind !== "event" || resume.eventId !== eventId) return;
+    takeResumeAuthIf("event");
+    const payload = new FormData();
+    Object.entries(hiddenFields).forEach(([name, value]) => payload.set(name, value));
+    payload.set("playerId", playerId);
+    setQueued(payload);
+    setConfirmOpen(true);
+  }, [canResume, eventId, playerId, hiddenFields]);
 
   async function book(payload: FormData) {
     setPending(true);
@@ -65,9 +83,20 @@ export default function BookButton({
 
   if (!user) {
     return (
-      <Button href="/portal" size="sm">
-        Sign In To Book
-      </Button>
+      <>
+        <Button type="button" size="sm" onClick={() => setAuthOpen(true)}>
+          Book
+        </Button>
+        <AuthDialog
+          open={authOpen}
+          onClose={() => setAuthOpen(false)}
+          onSuccess={() => {
+            setResumeAuth({ kind: "event", eventId: hiddenFields.eventId });
+            setAuthOpen(false);
+            router.refresh();
+          }}
+        />
+      </>
     );
   }
 

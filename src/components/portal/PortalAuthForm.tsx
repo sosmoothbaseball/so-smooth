@@ -16,9 +16,17 @@ const shake = { x: [0, -10, 10, -7, 7, -3, 3, 0] };
 export default function PortalAuthForm({
   initialError = "",
   next = null,
+  stay = false,
+  embedded = false,
+  onSuccess,
+  onModeChange,
 }: {
   initialError?: string;
   next?: string | null;
+  stay?: boolean;
+  embedded?: boolean;
+  onSuccess?: () => void;
+  onModeChange?: (mode: "login" | "signup") => void;
 }) {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [password, setPassword] = useState("");
@@ -31,10 +39,11 @@ export default function PortalAuthForm({
     setShakeKey((key) => key + 1);
   }
 
-  function switchMode(next: "login" | "signup") {
-    setMode(next);
+  function switchMode(nextMode: "login" | "signup") {
+    setMode(nextMode);
     setError("");
     setPassword("");
+    onModeChange?.(nextMode);
   }
 
   async function onSubmit(formData: FormData) {
@@ -54,6 +63,7 @@ export default function PortalAuthForm({
     try {
       const result = mode === "login" ? await loginAction(formData) : await signupAction(formData);
       if (result?.ok === false) showError(result.error);
+      else onSuccess?.();
     } catch (error) {
       if (typeof error === "object" && error && "digest" in error) throw error;
       showError(mode === "login" ? "Incorrect password" : "Could not create the account. Try again.");
@@ -63,18 +73,28 @@ export default function PortalAuthForm({
   }
 
   return (
-    <div className="rounded-3xl border border-ink/10 bg-white p-6 shadow-sm sm:p-10">
-      <p className="text-xs font-semibold uppercase tracking-[0.25em] text-green-700">
-        {mode === "login" ? "Sign In" : "Create Account"}
-      </p>
-      <h2 className="mt-3 font-display text-4xl uppercase tracking-wide text-ink">
-        {mode === "login" ? "Welcome Back" : "Join The Portal"}
-      </h2>
-      <p className="mt-3 mb-8 text-sm text-ink/60">
-        {mode === "login"
-          ? "Parents book here. Coaches run slots, camps, and the calendar."
-          : "New family accounts land in the parent portal after you sign up."}
-      </p>
+    <div
+      className={
+        embedded
+          ? ""
+          : "rounded-3xl border border-ink/10 bg-white p-6 shadow-sm sm:p-10"
+      }
+    >
+      {embedded ? null : (
+        <>
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-green-700">
+            {mode === "login" ? "Sign In" : "Create Account"}
+          </p>
+          <h2 className="mt-3 font-display text-4xl uppercase tracking-wide text-ink">
+            {mode === "login" ? "Welcome Back" : "Join The Portal"}
+          </h2>
+          <p className="mt-3 mb-8 text-sm text-ink/60">
+            {mode === "login"
+              ? "Parents book here. Coaches run slots, camps, and the calendar."
+              : "New family accounts land in the parent portal after you sign up."}
+          </p>
+        </>
+      )}
 
       <form
         className="flex flex-col gap-5"
@@ -83,6 +103,7 @@ export default function PortalAuthForm({
           await onSubmit(new FormData(event.currentTarget));
         }}
       >
+        {stay ? <input type="hidden" name="stay" value="1" /> : null}
         {next ? <input type="hidden" name="next" value={next} /> : null}
         {mode === "signup" && (
           <>
@@ -142,7 +163,7 @@ export default function PortalAuthForm({
           </motion.p>
         )}
 
-        <Button type="submit" size="lg" className="w-full" pending={pending}>
+        <Button type="submit" size={embedded ? "md" : "lg"} className="w-full" pending={pending}>
           {pending ? (
             <>
               <Spinner className="h-5 w-5" />

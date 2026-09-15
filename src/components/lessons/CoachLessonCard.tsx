@@ -1,26 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import type { LessonCoachCard, PublicSlot } from "@/lib/lessons";
 import { dayKey, formatSlotDay, formatSlotTime, weekDays } from "@/lib/lessons";
 import {
   bookLessonAction,
   checkLessonSlotAction,
-  createParentForBookingAction,
-  loginForBookingAction,
 } from "@/lib/portal/actions";
+import { peekResumeAuth, setResumeAuth, takeResumeAuthIf } from "@/lib/portal/resume-auth";
+import AuthDialog from "@/components/portal/AuthDialog";
 import Button from "@/components/ui/Button";
-import Spinner from "@/components/ui/Spinner";
-import { TextField } from "@/components/ui/FormField";
 import BookingConfirmed from "@/components/portal/BookingConfirmed";
 import PickOrAddPlayer, { type BookingPlayer } from "@/components/portal/PickOrAddPlayer";
-import PasswordRules from "@/components/portal/PasswordRules";
-import { passwordMeetsRules, PASSWORD_RULES_MESSAGE } from "@/lib/portal/password";
-import { phoneLooksValid, PHONE_REQUIRED_MESSAGE } from "@/lib/portal/phone";
 import { cn } from "@/lib/utils";
 
 type Session = {
@@ -60,15 +54,15 @@ export default function CoachLessonCard({
     .find((key) => liveSlots.some((slot) => dayKey(slot.startsAt) === key));
   const [selectedDay, setSelectedDay] = useState(firstOpenKey || dayKey(days[0]));
   const [activeSlot, setActiveSlot] = useState<PublicSlot | null>(null);
-  const [mode, setMode] = useState<"login" | "create">("login");
+  const [authOpen, setAuthOpen] = useState(false);
   const [error, setError] = useState("");
-  const [shakeKey, setShakeKey] = useState(0);
-  const [newPassword, setNewPassword] = useState("");
   const [pending, setPending] = useState(false);
   const [confirmed, setConfirmed] = useState<{ title: string; detail: string } | null>(null);
   const [players, setPlayers] = useState<BookingPlayer[]>(session?.players ?? []);
   const [picked, setPicked] = useState<BookingPlayer | null>(session?.players[0] ?? null);
   const [bookingStep, setBookingStep] = useState<"player" | "confirm">("player");
+  const pendingSlotId = useRef<string | null>(null);
+  const startedFromQuery = useRef(false);
 
   useEffect(() => {
     setPlayers(session?.players ?? []);
@@ -80,13 +74,18 @@ export default function CoachLessonCard({
   }, [session]);
 
   useEffect(() => {
-    if (!initialSlotId) return;
+    if (!initialSlotId || startedFromQuery.current) return;
     const match = liveSlots.find((slot) => slot.id === initialSlotId);
-    if (match) {
-      setSelectedDay(dayKey(match.startsAt));
-      setActiveSlot(match);
+    if (!match) return;
+    startedFromQuery.current = true;
+    if (!session) {
+      pendingSlotId.current = match.id;
+      setAuthOpen(true);
+      return;
     }
-  }, [initialSlotId, liveSlots]);
+    setSelectedDay(dayKey(match.startsAt));
+    void beginBooking(match);
+  }, [initialSlotId, liveSlots, session]);
 
   useEffect(() => {
     if (days.length === 0) return;
@@ -103,9 +102,8 @@ export default function CoachLessonCard({
     setTakenIds((current) => (current.includes(slotId) ? current : [...current, slotId]));
   }
 
-  async function openBook(slot: PublicSlot) {
+  async function beginBooking(slot: PublicSlot) {
     setError("");
-    setMode("login");
     setBookingStep("player");
     setPicked(players[0] ?? session?.players[0] ?? null);
     setActiveSlot(slot);
@@ -117,6 +115,25 @@ export default function CoachLessonCard({
       markTaken(slot.id);
     }
   }
+
+  function requestBook(slot: PublicSlot) {
+    if (!session) {
+      pendingSlotId.current = slot.id;
+      setAuthOpen(true);
+      return;
+    }
+    void beginBooking(slot);
+  }
+
+  useEffect(() => {
+    if (!session) return;
+    const resume = peekResumeAuth();
+    if (resume?.kind !== "lesson") return;
+    const slot = liveSlots.find((item) => item.id === resume.slotId);
+    if (!slot) return;
+    takeResumeAuthIf("lesson");
+    void beginBooking(slot);
+  }, [session?.id, liveSlots]);
 
   async function confirmBooking(formData: FormData) {
     if (!activeSlot) return;
@@ -152,38 +169,6 @@ export default function CoachLessonCard({
       detail: [player?.name, player?.ageGroup, when, coach.location].filter(Boolean).join(" · "),
     });
     router.refresh();
-  }
-
-  async function signIn(formData: FormData) {
-    setPending(true);
-    setError("");
-    const result = await loginForBookingAction(formData);
-    setPending(false);
-    if (result?.error) {
-      setError(result.error);
-      setShakeKey((key) => key + 1);
-    }
-  }
-
-  async function createAccount(formData: FormData) {
-    if (!phoneLooksValid(String(formData.get("phone") || ""))) {
-      setError(PHONE_REQUIRED_MESSAGE);
-      setShakeKey((key) => key + 1);
-      return;
-    }
-    if (!passwordMeetsRules(String(formData.get("password") || ""))) {
-      setError(PASSWORD_RULES_MESSAGE);
-      setShakeKey((key) => key + 1);
-      return;
-    }
-    setPending(true);
-    setError("");
-    const result = await createParentForBookingAction(formData);
-    setPending(false);
-    if (result?.error) {
-      setError(result.error);
-      setShakeKey((key) => key + 1);
-    }
   }
 
   return (
@@ -273,7 +258,7 @@ export default function CoachLessonCard({
               <p className="text-sm font-semibold text-ink">
                 {formatSlotTime(slot.startsAt)} – {formatSlotTime(slot.endsAt)}
               </p>
-              <Button type="button" size="sm" onClick={() => openBook(slot)}>
+              <Button type="button" size="sm" onClick={() => requestBook(slot)}>
                 Book
               </Button>
             </li>
@@ -382,140 +367,23 @@ export default function CoachLessonCard({
                   You are signed in as a coach. Use a parent account to book a player.
                 </p>
               ) : (
-                <div>
-                  <div className="mb-5 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setMode("login")}
-                      className={cn(
-                        "rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide",
-                        mode === "login" ? "bg-green-700 text-bone" : "bg-bone text-ink/60",
-                      )}
-                    >
-                      Sign In
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMode("create");
-                        setError("");
-                        setNewPassword("");
-                      }}
-                      className={cn(
-                        "rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide",
-                        mode === "create" ? "bg-green-700 text-bone" : "bg-bone text-ink/60",
-                      )}
-                    >
-                      Create Account
-                    </button>
-                  </div>
-                  {mode === "login" ? (
-                    <form
-                      onSubmit={async (event) => {
-                        event.preventDefault();
-                        await signIn(new FormData(event.currentTarget));
-                      }}
-                      className="flex flex-col gap-4"
-                    >
-                      <input type="hidden" name="slotId" value={activeSlot.id} />
-                      <TextField id={`${coach.slug}-email`} name="email" type="email" label="Email" required />
-                      <TextField
-                        id={`${coach.slug}-password`}
-                        name="password"
-                        type="password"
-                        label="Password"
-                        required
-                        invalid={Boolean(error)}
-                      />
-                      {error && (
-                        <motion.p
-                          key={shakeKey}
-                          initial={{ x: 0 }}
-                          animate={{ x: [0, -10, 10, -7, 7, -3, 3, 0] }}
-                          transition={{ duration: 0.45 }}
-                          className="text-sm font-medium text-red-700"
-                        >
-                          {error}
-                        </motion.p>
-                      )}
-                      <Button type="submit" pending={pending}>
-                        {pending ? (
-                          <>
-                            <Spinner className="h-4 w-4" /> Signing In
-                          </>
-                        ) : (
-                          "Sign In And Continue"
-                        )}
-                      </Button>
-                    </form>
-                  ) : (
-                    <form
-                      onSubmit={async (event) => {
-                        event.preventDefault();
-                        await createAccount(new FormData(event.currentTarget));
-                      }}
-                      className="flex flex-col gap-4"
-                    >
-                      <input type="hidden" name="slotId" value={activeSlot.id} />
-                      <TextField id={`${coach.slug}-name`} name="name" label="Your Name" required />
-                      <TextField
-                        id={`${coach.slug}-phone`}
-                        name="phone"
-                        type="tel"
-                        label="Phone"
-                        required
-                      />
-                      <TextField id={`${coach.slug}-new-email`} name="email" type="email" label="Email" required />
-                      <div>
-                        <TextField
-                          id={`${coach.slug}-new-password`}
-                          name="password"
-                          type="password"
-                          label="Create Password"
-                          required
-                          invalid={Boolean(error)}
-                          value={newPassword}
-                          onChange={(event) => setNewPassword(event.target.value)}
-                        />
-                        <div className="mt-3">
-                          <PasswordRules value={newPassword} />
-                        </div>
-                      </div>
-                      <TextField id={`${coach.slug}-player`} name="playerName" label="Player Name" required />
-                      <TextField
-                        id={`${coach.slug}-age`}
-                        name="ageGroup"
-                        label="Age Group"
-                        defaultValue="12U"
-                      />
-                      {error && (
-                        <motion.p
-                          key={shakeKey}
-                          initial={{ x: 0 }}
-                          animate={{ x: [0, -10, 10, -7, 7, -3, 3, 0] }}
-                          transition={{ duration: 0.45 }}
-                          className="text-sm font-medium text-red-700"
-                        >
-                          {error}
-                        </motion.p>
-                      )}
-                      <Button type="submit" pending={pending}>
-                        {pending ? (
-                          <>
-                            <Spinner className="h-4 w-4" /> Creating
-                          </>
-                        ) : (
-                          "Create Account And Continue"
-                        )}
-                      </Button>
-                    </form>
-                  )}
-                </div>
+                <p className="text-sm text-ink/60">Sign in with a family account to book this time.</p>
               )}
             </div>
           </div>
         </div>
       )}
+
+      <AuthDialog
+        open={authOpen}
+        onClose={() => setAuthOpen(false)}
+        onSuccess={() => {
+          const slotId = pendingSlotId.current;
+          if (slotId) setResumeAuth({ kind: "lesson", slotId });
+          setAuthOpen(false);
+          router.refresh();
+        }}
+      />
 
       <BookingConfirmed
         open={Boolean(confirmed)}

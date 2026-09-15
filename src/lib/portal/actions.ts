@@ -115,6 +115,7 @@ export async function loginAction(formData: FormData): Promise<ActionResult> {
   if (error || !data.user) return fail("Incorrect password");
   const profile = await linkAuthUser(data.user);
   if (!profile) return fail("Incorrect password");
+  if (String(formData.get("stay") || "") === "1") return ok();
   const next = parentReturnPath(formData);
   if (profile.role === "parent" && next) redirect(next);
   redirect(portalHome(profile.role));
@@ -173,9 +174,13 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
   if (!data.session) {
     const signedIn = await supabase.auth.signInWithPassword({ email, password });
     if (signedIn.error) {
+      if (String(formData.get("stay") || "") === "1") {
+        return fail("Check your email to confirm the account, then sign in.");
+      }
       redirect("/portal/check-email");
     }
   }
+  if (String(formData.get("stay") || "") === "1") return ok();
   const next = parentReturnPath(formData);
   if (next) redirect(next);
   redirect(portalHome("parent"));
