@@ -5,6 +5,7 @@ import ForgotPasswordForm from "@/components/portal/ForgotPasswordForm";
 import ResetPasswordForm from "@/components/portal/ResetPasswordForm";
 import { getSession } from "@/lib/portal/auth";
 import { hasPasswordResetSession } from "@/lib/portal/password-reset";
+import { isStaffRole } from "@/lib/portal/roles";
 
 export const metadata: Metadata = {
   title: "Reset Password | So Smooth",
@@ -40,7 +41,9 @@ export default async function UpdatePasswordPage() {
                 </p>
                 <ResetPasswordForm
                   nextHref={
-                    session.role === "coach" ? "/portal/coach/profile" : "/portal/parent/profile"
+                    session.role && isStaffRole(session.role)
+                      ? "/portal/coach/profile"
+                      : "/portal/parent/profile"
                   }
                 />
               </>

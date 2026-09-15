@@ -11,6 +11,7 @@ import {
   checkLessonSlotAction,
 } from "@/lib/portal/actions";
 import { peekResumeAuth, setResumeAuth, takeResumeAuthIf } from "@/lib/portal/resume-auth";
+import { isStaffRole } from "@/lib/portal/roles";
 import AuthDialog from "@/components/portal/AuthDialog";
 import Button from "@/components/ui/Button";
 import BookingConfirmed from "@/components/portal/BookingConfirmed";
@@ -362,7 +363,7 @@ export default function CoachLessonCard({
                     </div>
                   </form>
                 ) : null
-              ) : session?.role === "coach" ? (
+              ) : isStaffRole(session?.role || "") ? (
                 <p className="text-sm text-ink/60">
                   You are signed in as a coach. Use a parent account to book a player.
                 </p>

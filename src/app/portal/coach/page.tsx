@@ -1,5 +1,5 @@
 import { requireCoach } from "@/lib/portal/auth";
-import { getCoachBookings, getCoachSlots } from "@/lib/portal/queries";
+import { getCoachBookings, getCoachSlots, getStaffCoaches } from "@/lib/portal/queries";
 import {
   blockLessonDayAction,
   cancelLessonBookingAction,
@@ -7,6 +7,7 @@ import {
 } from "@/lib/portal/actions";
 import { getWeeklyHours } from "@/lib/portal/availability";
 import { formatRange } from "@/lib/portal/dates";
+import { isOwnerRole } from "@/lib/portal/roles";
 import { dayKey, formatSlotDay, weekDays } from "@/lib/lessons";
 import PortalShell from "@/components/portal/PortalShell";
 import PortalPanel from "@/components/portal/PortalPanel";
@@ -15,15 +16,126 @@ import Button from "@/components/ui/Button";
 import ActionForm from "@/components/portal/ActionForm";
 import ParentContact from "@/components/portal/ParentContact";
 import OfferLessonsCard from "@/components/portal/OfferLessonsCard";
+import OwnerCoachPicker from "@/components/portal/OwnerCoachPicker";
 
-export default async function CoachSchedulePage() {
+type ScheduleDay = {
+  date: Date;
+  key: string;
+  openSlots: Awaited<ReturnType<typeof getCoachSlots>>;
+  bookedSlots: Awaited<ReturnType<typeof getCoachSlots>>;
+};
+
+function UpcomingTimesList({ days, editable }: { days: ScheduleDay[]; editable: boolean }) {
+  return (
+    <ul className="flex flex-col gap-3">
+      {days.map((day) => {
+        const empty = day.openSlots.length === 0 && day.bookedSlots.length === 0;
+        return (
+          <li key={day.key} className="rounded-2xl border border-ink/10 px-4 py-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm font-semibold text-ink">{formatSlotDay(day.date)}</p>
+              {editable && day.openSlots.length > 0 && (
+                <ActionForm
+                  action={blockLessonDayAction}
+                  confirm={{
+                    title: "Clear this day?",
+                    message: "Are you sure you want to remove every open time on this day?",
+                    confirmLabel: "Clear Day",
+                  }}
+                >
+                  <input type="hidden" name="day" value={day.key} />
+                  <Button type="submit" variant="onLight" size="sm">
+                    Clear day
+                  </Button>
+                </ActionForm>
+              )}
+            </div>
+            {empty && <p className="mt-3 text-sm text-ink/45">No time slots this day.</p>}
+            {day.openSlots.length > 0 && (
+              <ul className="mt-3 flex flex-col gap-2">
+                {day.openSlots.map((slot) => (
+                  <li
+                    key={slot.id}
+                    className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <p className="text-sm text-ink/80">{formatRange(slot.startsAt, slot.endsAt)}</p>
+                    {editable ? (
+                      <ActionForm
+                        action={removeLessonSlotAction}
+                        confirm={{
+                          title: "Remove this time?",
+                          message: "Are you sure you want to remove this slot?",
+                          confirmLabel: "Remove",
+                        }}
+                      >
+                        <input type="hidden" name="slotId" value={slot.id} />
+                        <Button type="submit" variant="onLight" size="sm">
+                          Remove
+                        </Button>
+                      </ActionForm>
+                    ) : (
+                      <p className="text-xs font-semibold uppercase tracking-wide text-ink/45">
+                        Open
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {day.bookedSlots.length > 0 && (
+              <ul className="mt-3 flex flex-col gap-2">
+                {day.bookedSlots.map((slot) => (
+                  <li
+                    key={slot.id}
+                    className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div>
+                      <p className="text-sm text-ink/80">
+                        {formatRange(slot.startsAt, slot.endsAt)}
+                      </p>
+                      {slot.booking ? (
+                        <ParentContact
+                          name={slot.booking.parent.name}
+                          email={slot.booking.parent.email}
+                          phone={slot.booking.parent.phone}
+                        />
+                      ) : null}
+                    </div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-ink/45">
+                      Booked — cancel the lesson first
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+export default async function CoachSchedulePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ coach?: string }>;
+}) {
   const user = await requireCoach();
+  const { coach: coachParam } = await searchParams;
+  const owner = isOwnerRole(user.role);
+  const staffCoaches = owner ? await getStaffCoaches() : [];
+  const viewingId =
+    owner && coachParam && staffCoaches.some((coach) => coach.id === coachParam)
+      ? coachParam
+      : user.id;
+  const viewingSelf = viewingId === user.id;
+  const viewingCoach = staffCoaches.find((coach) => coach.id === viewingId);
   const [slots, bookings, hours] = await Promise.all([
-    getCoachSlots(user.id),
-    getCoachBookings(user.id),
-    getWeeklyHours(user.id),
+    getCoachSlots(viewingId),
+    getCoachBookings(viewingId),
+    viewingSelf ? getWeeklyHours(user.id) : Promise.resolve([]),
   ]);
-  const offering = user.offersLessons;
+  const offering = viewingSelf ? user.offersLessons : Boolean(viewingCoach?.offersLessons);
   const todayKey = dayKey(new Date());
   const upcomingDays = weekDays(0)
     .filter((date) => dayKey(date) >= todayKey)
@@ -37,109 +149,42 @@ export default async function CoachSchedulePage() {
         bookedSlots: daySlots.filter((slot) => slot.status === "booked"),
       };
     });
+  const coachLabel = viewingSelf ? null : viewingCoach?.name;
 
   return (
     <PortalShell user={user} pathname="/portal/coach">
-      <OfferLessonsCard offering={offering}>
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+      {owner ? (
+        <OwnerCoachPicker coaches={staffCoaches} selectedId={viewingId} ownerId={user.id} />
+      ) : null}
+      {viewingSelf ? (
+        <OfferLessonsCard offering={offering}>
+          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+            <PortalPanel
+              title="Set Availability"
+              description="Set hours once. They repeat every week. Families only see future open times for this week."
+            >
+              <WeeklyHoursForm hours={hours} />
+            </PortalPanel>
+
+            <PortalPanel title="Upcoming Times">
+              <UpcomingTimesList days={upcomingDays} editable />
+            </PortalPanel>
+          </div>
+        </OfferLessonsCard>
+      ) : (
         <PortalPanel
-          title="Set Availability"
-          description="Set hours once. They repeat every week. Families only see future open times for this week."
+          title={coachLabel ? `${coachLabel}'s Upcoming Times` : "Upcoming Times"}
+          description="Open and booked times on this coach's board for this week."
         >
-          <WeeklyHoursForm hours={hours} />
+          <UpcomingTimesList days={upcomingDays} editable={false} />
         </PortalPanel>
+      )}
 
-        <PortalPanel title="Upcoming Times">
-          <ul className="flex flex-col gap-3">
-            {upcomingDays.map((day) => {
-              const empty = day.openSlots.length === 0 && day.bookedSlots.length === 0;
-              return (
-                <li key={day.key} className="rounded-2xl border border-ink/10 px-4 py-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-sm font-semibold text-ink">{formatSlotDay(day.date)}</p>
-                    {day.openSlots.length > 0 && (
-                      <ActionForm
-                        action={blockLessonDayAction}
-                        confirm={{
-                          title: "Clear this day?",
-                          message: "Are you sure you want to remove every open time on this day?",
-                          confirmLabel: "Clear Day",
-                        }}
-                      >
-                        <input type="hidden" name="day" value={day.key} />
-                        <Button type="submit" variant="onLight" size="sm">
-                          Clear day
-                        </Button>
-                      </ActionForm>
-                    )}
-                  </div>
-                  {empty && (
-                    <p className="mt-3 text-sm text-ink/45">No time slots this day.</p>
-                  )}
-                  {day.openSlots.length > 0 && (
-                    <ul className="mt-3 flex flex-col gap-2">
-                      {day.openSlots.map((slot) => (
-                        <li
-                          key={slot.id}
-                          className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
-                        >
-                          <p className="text-sm text-ink/80">
-                            {formatRange(slot.startsAt, slot.endsAt)}
-                          </p>
-                          <ActionForm
-                            action={removeLessonSlotAction}
-                            confirm={{
-                              title: "Remove this time?",
-                              message: "Are you sure you want to remove this slot?",
-                              confirmLabel: "Remove",
-                            }}
-                          >
-                            <input type="hidden" name="slotId" value={slot.id} />
-                            <Button type="submit" variant="onLight" size="sm">
-                              Remove
-                            </Button>
-                          </ActionForm>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  {day.bookedSlots.length > 0 && (
-                    <ul className="mt-3 flex flex-col gap-2">
-                      {day.bookedSlots.map((slot) => (
-                        <li
-                          key={slot.id}
-                          className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
-                        >
-                          <div>
-                            <p className="text-sm text-ink/80">
-                              {formatRange(slot.startsAt, slot.endsAt)}
-                            </p>
-                            {slot.booking ? (
-                              <ParentContact
-                                name={slot.booking.parent.name}
-                                email={slot.booking.parent.email}
-                                phone={slot.booking.parent.phone}
-                              />
-                            ) : null}
-                          </div>
-                          <p className="text-xs font-semibold uppercase tracking-wide text-ink/45">
-                            Booked — cancel the lesson first
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </PortalPanel>
-      </div>
-      </OfferLessonsCard>
-
-      {(offering || bookings.length > 0) && (
+      {(offering || bookings.length > 0 || !viewingSelf) && (
       <div className="mt-6">
-        <PortalPanel title="Booked Lessons">
+        <PortalPanel
+          title={coachLabel ? `${coachLabel}'s Booked Lessons` : "Booked Lessons"}
+        >
           <ul className="flex flex-col gap-3">
             {bookings.length === 0 && (
               <li className="text-sm text-ink/50">No booked lessons yet.</li>

@@ -1,5 +1,6 @@
 import { getSession } from "@/lib/portal/auth";
 import { getFeaturedTestimonials } from "@/lib/portal/queries";
+import { isStaffRole } from "@/lib/portal/roles";
 import TestimonialsBoard from "@/components/home/TestimonialsBoard";
 
 export default async function Testimonials({ openSubmit = false }: { openSubmit?: boolean }) {
@@ -7,7 +8,7 @@ export default async function Testimonials({ openSubmit = false }: { openSubmit?
 
   const viewer = !session
     ? { kind: "guest" as const }
-    : session.role === "coach"
+    : isStaffRole(session.role)
       ? { kind: "coach" as const }
       : {
           kind: "parent" as const,

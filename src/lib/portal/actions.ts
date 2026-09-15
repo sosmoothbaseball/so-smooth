@@ -35,6 +35,7 @@ import { normalizePhone, phoneLooksValid, PHONE_REQUIRED_MESSAGE } from "@/lib/p
 import { careerRecentlySent, CAREER_WAIT_MS, markCareerSent } from "@/lib/portal/career-limit";
 import { Prisma } from "@prisma/client";
 import { safeReturnPath } from "@/lib/portal/paths";
+import { isOwnerRole, isStaffRole } from "@/lib/portal/roles";
 import {
   markTestimonialSent,
   testimonialRecentlySent,
@@ -370,7 +371,7 @@ export async function loginForBookingAction(formData: FormData) {
   }
   const profile = await linkAuthUser(data.user);
   if (!profile) return { ok: false, error: "Incorrect password" };
-  if (profile.role === "coach") redirect("/portal/coach");
+  if (isStaffRole(profile.role)) redirect("/portal/coach");
   redirect(slotId ? `/lessons?book=${slotId}` : "/lessons");
 }
 
@@ -477,10 +478,11 @@ export async function cancelLessonBookingAction(formData: FormData): Promise<Act
     include: { slot: { include: { coach: { select: { offersLessons: true } } } } },
   });
   if (!booking || booking.status !== "booked") return fail("That booking is already gone.");
-  if (user.role === "coach" && booking.slot.coachId !== user.id) {
-    return fail("You can only cancel lessons on your schedule.");
-  }
-  if (user.role !== "coach" && booking.parentId !== user.id) {
+  if (isStaffRole(user.role)) {
+    if (!isOwnerRole(user.role) && booking.slot.coachId !== user.id) {
+      return fail("You can only cancel lessons on your schedule.");
+    }
+  } else if (booking.parentId !== user.id) {
     return fail("You can only cancel your own booking.");
   }
 
@@ -663,10 +665,11 @@ export async function cancelEventSignupAction(formData: FormData): Promise<Actio
     include: { event: true },
   });
   if (!signup || signup.status !== "booked") return fail("That booking is already gone.");
-  if (user.role === "coach" && signup.event.createdById !== user.id) {
-    return fail("You can only cancel signups on your events.");
-  }
-  if (user.role !== "coach" && signup.parentId !== user.id) {
+  if (isStaffRole(user.role)) {
+    if (!isOwnerRole(user.role) && signup.event.createdById !== user.id) {
+      return fail("You can only cancel signups on your events.");
+    }
+  } else if (signup.parentId !== user.id) {
     return fail("You can only cancel your own booking.");
   }
   if (signup.event.endsAt <= now()) return fail("That event already ended.");

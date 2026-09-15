@@ -14,7 +14,7 @@ model Profile {
   name      String
   phone     String   @default("")
   offersLessons Boolean @default(false)
-  role      String   @default("parent")
+  role      String   @default("parent") // parent | coach | owner
   password  String   @default("")
   authId    String?  @unique
   createdAt DateTime @default(now())

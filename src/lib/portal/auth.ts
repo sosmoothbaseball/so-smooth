@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { prisma } from "@/lib/portal/prisma";
+import { isParentRole, isStaffRole } from "@/lib/portal/roles";
 import { createSupabaseServer } from "@/lib/supabase/server";
 
 const COOKIE = "so-smooth-portal";
@@ -67,18 +68,18 @@ export async function requireUser() {
 
 export async function requireCoach() {
   const user = await requireUser();
-  if (user.role !== "coach") redirect("/portal/parent");
+  if (!isStaffRole(user.role)) redirect("/portal/parent");
   return user;
 }
 
 export async function requireParent() {
   const user = await requireUser();
-  if (user.role !== "parent") redirect("/portal/coach");
+  if (!isParentRole(user.role)) redirect("/portal/coach");
   return user;
 }
 
 export function portalHome(role: string) {
-  return role === "coach" ? "/portal/coach" : "/portal/parent";
+  return isStaffRole(role) ? "/portal/coach" : "/portal/parent";
 }
 
 export async function ensureParentProfile(input: {

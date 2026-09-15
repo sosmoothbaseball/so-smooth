@@ -2,6 +2,7 @@ import { prisma } from "@/lib/portal/prisma";
 import { ensureLessonBoard, syncCoachLessonSlots } from "@/lib/portal/availability";
 import type { CalendarMark } from "@/lib/calendar-grid";
 import { lessonBoardWindow, now } from "@/lib/portal/time";
+import { STAFF_ROLES } from "@/lib/portal/roles";
 
 export async function getOpenSlotsByCoach() {
   await ensureLessonBoard();
@@ -25,12 +26,24 @@ export async function getOpenSlotsByCoach() {
 
 export function getLessonCoaches() {
   return prisma.profile.findMany({
-    where: { role: "coach", offersLessons: true },
+    where: { role: { in: [...STAFF_ROLES] }, offersLessons: true },
     select: {
       id: true,
       name: true,
       email: true,
       lessonSpec: true,
+    },
+    orderBy: { name: "asc" },
+  });
+}
+
+export function getStaffCoaches() {
+  return prisma.profile.findMany({
+    where: { role: { in: [...STAFF_ROLES] } },
+    select: {
+      id: true,
+      name: true,
+      offersLessons: true,
     },
     orderBy: { name: "asc" },
   });

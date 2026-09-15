@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { logoutAction } from "@/lib/portal/actions";
 import type { SessionUser } from "@/lib/portal/auth";
+import { isOwnerRole, isStaffRole } from "@/lib/portal/roles";
 import { cn } from "@/lib/utils";
 
 const COACH_LINKS = [
@@ -26,7 +27,8 @@ export default function PortalShell({
   pathname: string;
   children: React.ReactNode;
 }) {
-  const links = user.role === "coach" ? COACH_LINKS : PARENT_LINKS;
+  const staff = isStaffRole(user.role);
+  const links = staff ? COACH_LINKS : PARENT_LINKS;
 
   return (
     <section className="bg-bone py-20 sm:py-24">
@@ -34,7 +36,11 @@ export default function PortalShell({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-green-700">
-              {user.role === "coach" ? "Coach Portal" : "Family Portal"}
+              {isOwnerRole(user.role)
+                ? "Owner Portal"
+                : staff
+                  ? "Coach Portal"
+                  : "Family Portal"}
             </p>
             <h1 className="mt-2 font-display text-5xl uppercase tracking-wide text-ink sm:text-6xl">
               {user.name}

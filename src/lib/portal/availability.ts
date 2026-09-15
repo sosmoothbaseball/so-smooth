@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/portal/prisma";
 import { parseLessonMinutes } from "@/lib/portal/hours";
 import { lessonBoardWindow, now } from "@/lib/portal/time";
+import { STAFF_ROLES } from "@/lib/portal/roles";
 
 export { WEEKDAYS, minutesToTime, parseLessonMinutes, parseTimeToMinutes } from "@/lib/portal/hours";
 
@@ -212,7 +213,7 @@ export async function syncCoachLessonSlots(coachId: string, options?: { replaceO
 
 export async function ensureLessonBoard() {
   const coaches = await prisma.profile.findMany({
-    where: { role: "coach", offersLessons: true },
+    where: { role: { in: [...STAFF_ROLES] }, offersLessons: true },
     select: { id: true },
   });
   await Promise.all(coaches.map((coach) => syncCoachLessonSlots(coach.id)));
