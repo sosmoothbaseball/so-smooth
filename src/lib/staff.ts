@@ -56,7 +56,7 @@ export const STAFF_COACHES: StaffCoach[] = [
   {
     name: "Crix Taveras",
     slug: "crix-taveras",
-    role: "Coach",
+    role: "Player Development / Assistant Coach",
     initials: "CT",
     goal: "My goal as a coach is to give young players as much knowledge as possible while helping them develop both their skills and their understanding of the game. Having played at the college and professional levels, I want to pass down the lessons and experiences I’ve gained throughout my career. I want to see each player strive to get better, build confidence, and reach their full potential. Ultimately, my goal is to help players reach the next level, whether that means becoming a high-level high school player, playing college baseball, or eventually pursuing a career in professional baseball.",
     experience: [
