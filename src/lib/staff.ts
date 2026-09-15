@@ -6,6 +6,7 @@ export type StaffCoach = {
   goal?: string;
   experience?: string[];
   honors?: string[];
+  link?: { href: string; label: string };
 };
 
 export const STAFF_COACHES: StaffCoach[] = [
@@ -80,6 +81,10 @@ export const STAFF_COACHES: StaffCoach[] = [
       ".561 career slugging percentage",
       ".995 career OPS",
     ],
+    link: {
+      href: "https://www.baseball-reference.com/register/player.fcgi?id=tavera000cri",
+      label: "More Info",
+    },
   },
   {
     name: "Julio C.",

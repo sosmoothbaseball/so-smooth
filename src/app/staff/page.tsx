@@ -4,6 +4,7 @@ import { StaggerGroup, StaggerItem } from "@/components/ui/Stagger";
 import CTASection from "@/components/home/CTASection";
 import { STAFF_COACHES, type StaffCoach } from "@/lib/staff";
 import HashScroll from "@/components/staff/HashScroll";
+import Button from "@/components/ui/Button";
 
 export const metadata: Metadata = {
   title: "Staff | So Smooth",
@@ -12,7 +13,9 @@ export const metadata: Metadata = {
 };
 
 function CoachCard({ coach }: { coach: StaffCoach }) {
-  const filled = Boolean(coach.goal || coach.experience?.length || coach.honors?.length);
+  const filled = Boolean(
+    coach.goal || coach.experience?.length || coach.honors?.length || coach.link,
+  );
 
   return (
     <article
@@ -67,21 +70,36 @@ function CoachCard({ coach }: { coach: StaffCoach }) {
             </>
           )}
 
-          {coach.honors && coach.honors.length > 0 && (
+          {Boolean(coach.honors?.length || coach.link) ? (
             <div className="mt-auto pt-8">
-              <h3 className="font-display text-xl uppercase tracking-wide text-ink">
-                Awards & Honors
-              </h3>
-              <ul className="mt-4 space-y-2.5">
-                {coach.honors.map((item) => (
-                  <li key={item} className="flex gap-3 text-sm leading-relaxed text-ink/70">
-                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-yellow-500" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
+              {coach.honors && coach.honors.length > 0 && (
+                <>
+                  <h3 className="font-display text-xl uppercase tracking-wide text-ink">
+                    Awards & Honors
+                  </h3>
+                  <ul className="mt-4 space-y-2.5">
+                    {coach.honors.map((item) => (
+                      <li key={item} className="flex gap-3 text-sm leading-relaxed text-ink/70">
+                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-yellow-500" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              {coach.link && (
+                <Button
+                  href={coach.link.href}
+                  external
+                  variant="onLight"
+                  size="sm"
+                  className={coach.honors && coach.honors.length > 0 ? "mt-6" : undefined}
+                >
+                  {coach.link.label}
+                </Button>
+              )}
             </div>
-          )}
+          ) : null}
         </div>
       ) : (
         <div className="flex flex-1 flex-col p-7 sm:p-8">
