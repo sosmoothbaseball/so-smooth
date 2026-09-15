@@ -26,6 +26,15 @@ export default function Header() {
     setOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [open]);
+
   return (
     <header
       className={cn(
@@ -102,7 +111,7 @@ export default function Header() {
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="overflow-hidden border-t border-white/10 bg-ink xl:hidden"
           >
-            <nav className="flex flex-col gap-1 px-6 py-6">
+            <nav className="flex max-h-[calc(100dvh-4rem)] flex-col gap-1 overflow-y-auto overscroll-contain px-6 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:max-h-[calc(100dvh-4.25rem)]">
               {NAV_LINKS.map((link, i) => (
                 <motion.div
                   key={link.href}
