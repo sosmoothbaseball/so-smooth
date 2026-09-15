@@ -13,7 +13,7 @@ export const STAFF_COACHES: StaffCoach[] = [
   {
     name: "Carlos Vega",
     slug: "carlos-vega",
-    role: "Co-Founder & Head Coach",
+    role: "Co-Founder / Head Coach",
     initials: "CV",
     goal: "My goal is to help young athletes grow both as players and as people. Baseball is a great way to teach discipline, accountability, confidence, and the value of hard work. I want every player I work with to leave the field better than when they came in, while building the habits and mindset they need to succeed in baseball, in school, and in life. I want to instill confidence in all of my So Smooth Athletes and want them feeling trusted by me and all the coaches on the staff.",
     experience: [
@@ -36,7 +36,7 @@ export const STAFF_COACHES: StaffCoach[] = [
   {
     name: "Roberto Bueno",
     slug: "roberto-bueno",
-    role: "Co-Founder & Head Coach",
+    role: "Co-Founder / Head Coach",
     initials: "RB",
     goal: "My goal is to develop more than just baseball players. I want to help young athletes become responsible, disciplined, confident, and hardworking individuals. I push every player to be the best version of themselves, both on and off the field, while preparing them for the demands of high school, college, and life.",
     experience: [
