@@ -139,6 +139,54 @@ export function getParentEventSignups(parentId: string) {
 }
 
 export const CAREER_PAGE_SIZE = 8;
+export const TESTIMONIAL_PAGE_SIZE = 8;
+
+export function getFeaturedTestimonials() {
+  return prisma.testimonial.findMany({
+    where: { featuredSlot: { not: null } },
+    orderBy: { featuredSlot: "asc" },
+    take: 3,
+    select: {
+      id: true,
+      quote: true,
+      displayName: true,
+      roleLabel: true,
+      featuredSlot: true,
+    },
+  });
+}
+
+export function getTestimonialPage(page = 1) {
+  const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+  const skip = (safePage - 1) * TESTIMONIAL_PAGE_SIZE;
+  return Promise.all([
+    prisma.testimonial.findMany({
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: TESTIMONIAL_PAGE_SIZE,
+      include: { parent: { select: { name: true, email: true } } },
+    }),
+    prisma.testimonial.count(),
+    prisma.testimonial.findMany({
+      where: { featuredSlot: { not: null } },
+      orderBy: { featuredSlot: "asc" },
+      take: 3,
+      select: {
+        id: true,
+        quote: true,
+        displayName: true,
+        roleLabel: true,
+        featuredSlot: true,
+      },
+    }),
+  ]).then(([items, total, featured]) => ({
+    items,
+    total,
+    featured,
+    page: safePage,
+    pageCount: Math.max(1, Math.ceil(total / TESTIMONIAL_PAGE_SIZE)),
+  }));
+}
 
 export function getCareerSubmissionPage(page = 1) {
   const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;

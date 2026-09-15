@@ -6,7 +6,12 @@ import ProgramHighlights from "@/components/home/ProgramHighlights";
 import Testimonials from "@/components/home/Testimonials";
 import CTASection from "@/components/home/CTASection";
 
-export default function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ testimonial?: string }>;
+}) {
+  const { testimonial } = await searchParams;
   return (
     <>
       <Hero />
@@ -14,7 +19,7 @@ export default function Home() {
       <Features />
       <Stats />
       <ProgramHighlights />
-      <Testimonials />
+      <Testimonials openSubmit={testimonial === "1"} />
       <CTASection />
     </>
   );

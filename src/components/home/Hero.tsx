@@ -21,14 +21,26 @@ export default function Hero() {
     <section className="relative isolate flex h-svh min-h-[36rem] flex-col overflow-hidden bg-ink pt-24 pb-6 sm:pt-28">
       <Image
         src="/brand/home-hero-lockers-wide.jpg"
-        alt="So Smooth jerseys in the locker room"
+        alt=""
         fill
-        priority
-        quality={95}
+        aria-hidden
         sizes="100vw"
-        className="z-0 object-contain object-center"
+        className="z-0 scale-150 object-cover object-center blur-3xl md:hidden"
       />
-      <div className="absolute inset-0 z-0 bg-gradient-to-b from-ink/55 via-ink/20 to-ink/80" />
+      <div className="absolute inset-x-0 bottom-5 z-0 md:inset-0">
+        <div className="relative aspect-video w-full max-md:[mask-image:linear-gradient(to_bottom,transparent,black_20%,black)] md:absolute md:inset-0 md:aspect-auto">
+          <Image
+            src="/brand/home-hero-lockers-wide.jpg"
+            alt="So Smooth jerseys in the locker room"
+            fill
+            priority
+            quality={95}
+            sizes="100vw"
+            className="object-contain md:object-cover md:object-center"
+          />
+        </div>
+      </div>
+      <div className="absolute inset-0 z-0 bg-gradient-to-b from-ink/40 via-ink/15 to-ink/75 md:from-ink/55 md:via-ink/20 md:to-ink/80" />
 
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center px-6 text-center">
         <h1 className="font-display text-5xl uppercase leading-[0.95] tracking-wide text-bone drop-shadow-[0_2px_16px_rgba(0,0,0,0.65)] sm:text-7xl md:text-8xl">

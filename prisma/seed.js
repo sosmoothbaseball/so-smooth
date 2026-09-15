@@ -375,6 +375,40 @@ async function main() {
     ],
   });
 
+  const homepageStories = [
+    {
+      id: "seed_testimonial_jessica",
+      quote:
+        "My son's confidence and fundamentals have improved so much since joining. The coaches balance fun with serious skill-building.",
+      displayName: "Jessica R.",
+      roleLabel: "Parent, 14U Player",
+      featuredSlot: 1,
+    },
+    {
+      id: "seed_testimonial_marcus",
+      quote:
+        "You can tell the staff really cares about what they're teaching. Real coaches, real attention, real development.",
+      displayName: "Marcus T.",
+      roleLabel: "Parent, 9U Player",
+      featuredSlot: 2,
+    },
+    {
+      id: "seed_testimonial_jason_mia",
+      quote:
+        "The team-first culture is what sold us. It's competitive, but it never loses sight of teaching kids to love the game.",
+      displayName: "Jason & Mia L.",
+      roleLabel: "Parents, 12U Player",
+      featuredSlot: 3,
+    },
+  ];
+  for (const story of homepageStories) {
+    await prisma.testimonial.upsert({
+      where: { id: story.id },
+      update: {},
+      create: story,
+    });
+  }
+
   console.log("Seeded Supabase demo data.");
   console.log("Coach  coach@sosmooth.test  /  coach1");
   console.log("Coach  alex@sosmooth.test   /  alex12");

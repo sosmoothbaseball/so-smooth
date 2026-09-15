@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import PageHero from "@/components/ui/PageHero";
 import { getSession, portalHome } from "@/lib/portal/auth";
+import { safeReturnPath } from "@/lib/portal/paths";
 import PortalAuthForm from "@/components/portal/PortalAuthForm";
 
 export const metadata: Metadata = {
@@ -12,11 +13,15 @@ export const metadata: Metadata = {
 export default async function PortalPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 }) {
   const session = await getSession();
-  if (session) redirect(portalHome(session.role));
-  const { error } = await searchParams;
+  const { error, next: rawNext } = await searchParams;
+  const next = safeReturnPath(rawNext);
+  if (session) {
+    if (session.role === "parent" && next) redirect(next);
+    redirect(portalHome(session.role));
+  }
 
   return (
     <>
@@ -31,7 +36,7 @@ export default async function PortalPage({
 
       <section className="bg-bone py-20 sm:py-28">
         <div className="mx-auto w-full max-w-xl px-6">
-          <PortalAuthForm initialError={error ? "Incorrect password" : ""} />
+          <PortalAuthForm initialError={error ? "Incorrect password" : ""} next={next} />
         </div>
       </section>
     </>

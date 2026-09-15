@@ -13,7 +13,13 @@ import PasswordRules from "@/components/portal/PasswordRules";
 
 const shake = { x: [0, -10, 10, -7, 7, -3, 3, 0] };
 
-export default function PortalAuthForm({ initialError = "" }: { initialError?: string }) {
+export default function PortalAuthForm({
+  initialError = "",
+  next = null,
+}: {
+  initialError?: string;
+  next?: string | null;
+}) {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(initialError);
@@ -77,6 +83,7 @@ export default function PortalAuthForm({ initialError = "" }: { initialError?: s
           await onSubmit(new FormData(event.currentTarget));
         }}
       >
+        {next ? <input type="hidden" name="next" value={next} /> : null}
         {mode === "signup" && (
           <>
             <TextField

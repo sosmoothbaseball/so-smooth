@@ -33,6 +33,21 @@ import { passwordMeetsRules, PASSWORD_RULES_MESSAGE } from "@/lib/portal/passwor
 import { clearPasswordResetSession, hasPasswordResetSession } from "@/lib/portal/password-reset";
 import { normalizePhone, phoneLooksValid, PHONE_REQUIRED_MESSAGE } from "@/lib/portal/phone";
 import { careerRecentlySent, CAREER_WAIT_MS, markCareerSent } from "@/lib/portal/career-limit";
+import { Prisma } from "@prisma/client";
+import { safeReturnPath } from "@/lib/portal/paths";
+import {
+  markTestimonialSent,
+  testimonialRecentlySent,
+} from "@/lib/portal/testimonial-limit";
+import {
+  nextOpenSlot,
+  parseAgeGroup,
+  TESTIMONIAL_NAME_MAX,
+  TESTIMONIAL_QUOTE_MAX,
+  TESTIMONIAL_QUOTE_MIN,
+  TESTIMONIAL_WAIT_MS,
+  testimonialRoleLabel,
+} from "@/lib/portal/testimonials";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -78,6 +93,15 @@ function refreshCareers() {
   revalidatePath("/careers");
 }
 
+function refreshTestimonials() {
+  revalidatePath("/");
+  revalidatePath("/portal/coach/testimonials");
+}
+
+function parentReturnPath(formData: FormData) {
+  return safeReturnPath(formData.get("next"));
+}
+
 
 export async function loginAction(formData: FormData): Promise<ActionResult> {
   const email = String(formData.get("email") || "")
@@ -91,6 +115,8 @@ export async function loginAction(formData: FormData): Promise<ActionResult> {
   if (error || !data.user) return fail("Incorrect password");
   const profile = await linkAuthUser(data.user);
   if (!profile) return fail("Incorrect password");
+  const next = parentReturnPath(formData);
+  if (profile.role === "parent" && next) redirect(next);
   redirect(portalHome(profile.role));
 }
 
@@ -147,9 +173,11 @@ export async function signupAction(formData: FormData): Promise<ActionResult> {
   if (!data.session) {
     const signedIn = await supabase.auth.signInWithPassword({ email, password });
     if (signedIn.error) {
-      return fail("Account created. Confirm the email, then sign in.");
+      redirect("/portal/check-email");
     }
   }
+  const next = parentReturnPath(formData);
+  if (next) redirect(next);
   redirect(portalHome("parent"));
 }
 
@@ -396,7 +424,7 @@ export async function createParentForBookingAction(formData: FormData) {
   if (!data.session) {
     const signedIn = await supabase.auth.signInWithPassword({ email, password });
     if (signedIn.error) {
-      return { ok: false, error: "Account created. Confirm the email, then sign in." };
+      redirect("/portal/check-email");
     }
   }
   redirect(slotId ? `/lessons?book=${slotId}` : "/lessons");
@@ -917,5 +945,134 @@ export async function deleteCareerSubmissionAction(formData: FormData): Promise<
   const result = await prisma.careerSubmission.deleteMany({ where: { id } });
   if (result.count === 0) return fail("That application is already gone.");
   refreshCareers();
+  return ok();
+}
+
+function isUniqueConflict(error: unknown) {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+}
+
+export async function submitTestimonialAction(formData: FormData): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session) return fail("Sign in with a family account to share a story.");
+  if (session.role !== "parent") {
+    return fail("Family accounts can share stories from the homepage.");
+  }
+
+  const quote = String(formData.get("quote") || "").trim();
+  const displayName = String(formData.get("displayName") || "").trim();
+  const ageGroup = parseAgeGroup(String(formData.get("ageGroup") || "").trim());
+
+  if (displayName.length < 2) return fail("Enter the name to show with the story.");
+  if (displayName.length > TESTIMONIAL_NAME_MAX) {
+    return fail(`Keep the name under ${TESTIMONIAL_NAME_MAX} characters.`);
+  }
+  if (!ageGroup) return fail("Pick the player's age group.");
+  if (quote.length < TESTIMONIAL_QUOTE_MIN) {
+    return fail(`Write at least ${TESTIMONIAL_QUOTE_MIN} characters so coaches have something to review.`);
+  }
+  if (quote.length > TESTIMONIAL_QUOTE_MAX) {
+    return fail(`Keep the story under ${TESTIMONIAL_QUOTE_MAX} characters.`);
+  }
+  if (await testimonialRecentlySent()) {
+    return fail("You already sent a story in the last 30 minutes. Try again later.");
+  }
+  const recent = await prisma.testimonial.findFirst({
+    where: { parentId: session.id, createdAt: { gte: new Date(Date.now() - TESTIMONIAL_WAIT_MS) } },
+    select: { id: true },
+  });
+  if (recent) {
+    return fail("You already sent a story in the last 30 minutes. Try again later.");
+  }
+
+  await prisma.testimonial.create({
+    data: {
+      quote,
+      displayName,
+      roleLabel: testimonialRoleLabel(ageGroup),
+      parentId: session.id,
+    },
+  });
+  await markTestimonialSent();
+  refreshTestimonials();
+  return ok();
+}
+
+export async function featureTestimonialAction(formData: FormData): Promise<ActionResult> {
+  await requireCoach();
+  const id = String(formData.get("testimonialId") || "");
+  const replaceId = String(formData.get("replaceId") || "").trim();
+  if (!id) return fail("That story is already gone.");
+
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const row = await tx.testimonial.findUnique({ where: { id } });
+      if (!row) return fail("That story is already gone.");
+      if (row.featuredSlot) return ok();
+
+      const featured = await tx.testimonial.findMany({
+        where: { featuredSlot: { not: null } },
+        orderBy: { featuredSlot: "asc" },
+      });
+      const openSlot = nextOpenSlot(featured.map((item) => item.featuredSlot));
+
+      if (openSlot) {
+        await tx.testimonial.update({
+          where: { id },
+          data: { featuredSlot: openSlot },
+        });
+        return ok();
+      }
+
+      if (!replaceId) {
+        return fail("All 3 homepage spots are filled. Choose one story to replace. It stays in this list.");
+      }
+      if (replaceId === id) return fail("Pick a different story to take off the homepage.");
+
+      const outgoing = featured.find((item) => item.id === replaceId);
+      if (!outgoing?.featuredSlot) {
+        return fail("That homepage story changed. Refresh and try again.");
+      }
+
+      await tx.testimonial.update({
+        where: { id: outgoing.id },
+        data: { featuredSlot: null },
+      });
+      await tx.testimonial.update({
+        where: { id },
+        data: { featuredSlot: outgoing.featuredSlot },
+      });
+      return ok();
+    });
+    if (result.ok) refreshTestimonials();
+    return result;
+  } catch (error) {
+    if (isUniqueConflict(error)) {
+      return fail("Those homepage spots changed. Refresh and try again.");
+    }
+    throw error;
+  }
+}
+
+export async function unfeatureTestimonialAction(formData: FormData): Promise<ActionResult> {
+  await requireCoach();
+  const id = String(formData.get("testimonialId") || "");
+  if (!id) return fail("That story is already gone.");
+  const result = await prisma.testimonial.updateMany({
+    where: { id, featuredSlot: { not: null } },
+    data: { featuredSlot: null },
+  });
+  if (result.count === 0) return fail("That story is not on the homepage.");
+  refreshTestimonials();
+  return ok();
+}
+
+export async function deleteTestimonialAction(formData: FormData): Promise<ActionResult> {
+  await requireCoach();
+  const id = String(formData.get("testimonialId") || "");
+  if (!id) return fail("That story is already gone.");
+  const result = await prisma.testimonial.deleteMany({ where: { id } });
+  if (result.count === 0) return fail("That story is already gone.");
+  refreshTestimonials();
   return ok();
 }

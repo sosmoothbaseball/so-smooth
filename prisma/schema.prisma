@@ -27,6 +27,7 @@ model Profile {
   eventsCreated   UpcomingEvent[]
   eventSignups    EventSignup[]
   calendarEvents  CalendarEvent[]
+  testimonials    Testimonial[]
 }
 
 model WeeklyHours {
@@ -130,6 +131,19 @@ model CareerSubmission {
   resumeUrl    String   @default("")
   message      String
   createdAt    DateTime @default(now())
+}
+
+model Testimonial {
+  id           String   @id @default(cuid())
+  quote        String
+  displayName  String
+  roleLabel    String
+  featuredSlot Int?     @unique
+  parentId     String?
+  parent       Profile? @relation(fields: [parentId], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
 }
 
 model CalendarEvent {
