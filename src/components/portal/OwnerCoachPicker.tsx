@@ -16,7 +16,7 @@ export default function OwnerCoachPicker({
         All Coaches
       </p>
       <p className="mt-2 text-sm text-ink/55">
-        Open a coach to see their lesson bookings and upcoming times.
+        Open a coach to see their booked lessons.
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
         {coaches.map((coach) => {

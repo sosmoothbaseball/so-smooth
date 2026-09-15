@@ -25,7 +25,7 @@ type ScheduleDay = {
   bookedSlots: Awaited<ReturnType<typeof getCoachSlots>>;
 };
 
-function UpcomingTimesList({ days, editable }: { days: ScheduleDay[]; editable: boolean }) {
+function UpcomingTimesList({ days }: { days: ScheduleDay[] }) {
   return (
     <ul className="flex flex-col gap-3">
       {days.map((day) => {
@@ -34,7 +34,7 @@ function UpcomingTimesList({ days, editable }: { days: ScheduleDay[]; editable: 
           <li key={day.key} className="rounded-2xl border border-ink/10 px-4 py-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm font-semibold text-ink">{formatSlotDay(day.date)}</p>
-              {editable && day.openSlots.length > 0 && (
+              {day.openSlots.length > 0 && (
                 <ActionForm
                   action={blockLessonDayAction}
                   confirm={{
@@ -59,25 +59,19 @@ function UpcomingTimesList({ days, editable }: { days: ScheduleDay[]; editable: 
                     className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <p className="text-sm text-ink/80">{formatRange(slot.startsAt, slot.endsAt)}</p>
-                    {editable ? (
-                      <ActionForm
-                        action={removeLessonSlotAction}
-                        confirm={{
-                          title: "Remove this time?",
-                          message: "Are you sure you want to remove this slot?",
-                          confirmLabel: "Remove",
-                        }}
-                      >
-                        <input type="hidden" name="slotId" value={slot.id} />
-                        <Button type="submit" variant="onLight" size="sm">
-                          Remove
-                        </Button>
-                      </ActionForm>
-                    ) : (
-                      <p className="text-xs font-semibold uppercase tracking-wide text-ink/45">
-                        Open
-                      </p>
-                    )}
+                    <ActionForm
+                      action={removeLessonSlotAction}
+                      confirm={{
+                        title: "Remove this time?",
+                        message: "Are you sure you want to remove this slot?",
+                        confirmLabel: "Remove",
+                      }}
+                    >
+                      <input type="hidden" name="slotId" value={slot.id} />
+                      <Button type="submit" variant="onLight" size="sm">
+                        Remove
+                      </Button>
+                    </ActionForm>
                   </li>
                 ))}
               </ul>
@@ -131,24 +125,26 @@ export default async function CoachSchedulePage({
   const viewingSelf = viewingId === user.id;
   const viewingCoach = staffCoaches.find((coach) => coach.id === viewingId);
   const [slots, bookings, hours] = await Promise.all([
-    getCoachSlots(viewingId),
+    viewingSelf ? getCoachSlots(user.id) : Promise.resolve([]),
     getCoachBookings(viewingId),
     viewingSelf ? getWeeklyHours(user.id) : Promise.resolve([]),
   ]);
-  const offering = viewingSelf ? user.offersLessons : Boolean(viewingCoach?.offersLessons);
+  const offering = user.offersLessons;
   const todayKey = dayKey(new Date());
-  const upcomingDays = weekDays(0)
-    .filter((date) => dayKey(date) >= todayKey)
-    .map((date) => {
-      const key = dayKey(date);
-      const daySlots = slots.filter((slot) => dayKey(slot.startsAt) === key);
-      return {
-        date,
-        key,
-        openSlots: daySlots.filter((slot) => slot.status === "open"),
-        bookedSlots: daySlots.filter((slot) => slot.status === "booked"),
-      };
-    });
+  const upcomingDays = viewingSelf
+    ? weekDays(0)
+        .filter((date) => dayKey(date) >= todayKey)
+        .map((date) => {
+          const key = dayKey(date);
+          const daySlots = slots.filter((slot) => dayKey(slot.startsAt) === key);
+          return {
+            date,
+            key,
+            openSlots: daySlots.filter((slot) => slot.status === "open"),
+            bookedSlots: daySlots.filter((slot) => slot.status === "booked"),
+          };
+        })
+    : [];
   const coachLabel = viewingSelf ? null : viewingCoach?.name;
 
   return (
@@ -167,20 +163,13 @@ export default async function CoachSchedulePage({
             </PortalPanel>
 
             <PortalPanel title="Upcoming Times">
-              <UpcomingTimesList days={upcomingDays} editable />
+              <UpcomingTimesList days={upcomingDays} />
             </PortalPanel>
           </div>
         </OfferLessonsCard>
-      ) : (
-        <PortalPanel
-          title={coachLabel ? `${coachLabel}'s Upcoming Times` : "Upcoming Times"}
-          description="Open and booked times on this coach's board for this week."
-        >
-          <UpcomingTimesList days={upcomingDays} editable={false} />
-        </PortalPanel>
-      )}
+      ) : null}
 
-      {(offering || bookings.length > 0 || !viewingSelf) && (
+      {(viewingSelf ? offering || bookings.length > 0 : true) && (
       <div className="mt-6">
         <PortalPanel
           title={coachLabel ? `${coachLabel}'s Booked Lessons` : "Booked Lessons"}
