@@ -5,6 +5,7 @@ import CTASection from "@/components/home/CTASection";
 import { STAFF_COACHES, type StaffCoach } from "@/lib/staff";
 import HashScroll from "@/components/staff/HashScroll";
 import Button from "@/components/ui/Button";
+import { ArrowUpRight } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Staff | So Smooth",
@@ -91,11 +92,12 @@ function CoachCard({ coach }: { coach: StaffCoach }) {
                 <Button
                   href={coach.link.href}
                   external
-                  variant="onLight"
-                  size="sm"
+                  variant="secondary"
+                  size="lg"
                   className={coach.honors && coach.honors.length > 0 ? "mt-6" : undefined}
                 >
                   {coach.link.label}
+                  <ArrowUpRight className="h-4 w-4" />
                 </Button>
               )}
             </div>

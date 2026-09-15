@@ -83,7 +83,7 @@ export const STAFF_COACHES: StaffCoach[] = [
     ],
     link: {
       href: "https://www.baseball-reference.com/register/player.fcgi?id=tavera000cri",
-      label: "More Info",
+      label: "Baseball Reference",
     },
   },
   {

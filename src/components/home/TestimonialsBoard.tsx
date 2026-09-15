@@ -4,7 +4,7 @@ import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Quote, Star, X } from "lucide-react";
 import { submitTestimonialAction } from "@/lib/portal/actions";
-import { AGE_GROUPS } from "@/lib/portal/age-groups";
+import { ageGroupOptions } from "@/lib/portal/age-groups";
 import { TESTIMONIAL_QUOTE_MAX, TESTIMONIAL_QUOTE_MIN } from "@/lib/portal/testimonials";
 import { setResumeAuth, takeResumeAuthIf } from "@/lib/portal/resume-auth";
 import ActionForm from "@/components/portal/ActionForm";
@@ -191,7 +191,7 @@ export default function TestimonialsBoard({
                 defaultValue={viewer.ageGroup}
                 required
               >
-                {AGE_GROUPS.map((age) => (
+                {ageGroupOptions(viewer.ageGroup).map((age) => (
                   <option key={age} value={age}>
                     {age}
                   </option>

@@ -15,7 +15,8 @@ export function testimonialRoleLabel(ageGroup: string) {
 }
 
 export function parseAgeGroup(value: string) {
-  return (AGE_GROUPS as readonly string[]).includes(value) ? value : null;
+  if ((AGE_GROUPS as readonly string[]).includes(value)) return value;
+  return /^\d+U$/.test(value) ? value : null;
 }
 
 export function nextOpenSlot(used: Array<number | null | undefined>): FeaturedSlot | null {
