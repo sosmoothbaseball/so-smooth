@@ -98,7 +98,7 @@ export const STAFF_COACHES: StaffCoach[] = [
   {
     name: "Alex Howard",
     slug: "alex-howard",
-    role: "College Coach & Pitching Coordinator",
+    role: "College Coach / Pitching Coordinator",
     initials: "AH",
     goal: "My journey in baseball has shaped the way I coach today. Having my playing career cut short by a career-ending car accident gave me a completely different perspective on baseball and life. It taught me how quickly things can change and how important it is to make the most of every opportunity.\n\nI gained valuable experience working at Beimel Athletics, a prestigious baseball training facility, where I oversaw the facility and helped manage programs for athletes of all levels, from middle school players to MLB athletes. During my time there, I gained hands-on experience utilizing advanced technology such as TrackMan and HitTrax to evaluate performance, analyze data, and help athletes better understand their development. I am excited to bring this experience, knowledge, and use of technology to the So Smooth athletes and provide them with another level of development both on and off the field.",
     experience: [
