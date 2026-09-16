@@ -5,6 +5,7 @@ import CTASection from "@/components/home/CTASection";
 import { STAFF_COACHES, type StaffCoach } from "@/lib/staff";
 import HashScroll from "@/components/staff/HashScroll";
 import Button from "@/components/ui/Button";
+import { InstagramIcon } from "@/components/ui/SocialIcons";
 import { ArrowUpRight } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -39,6 +40,18 @@ function CoachCard({ coach }: { coach: StaffCoach }) {
             </p>
           ) : (
             <div className="mt-3 h-2.5 w-36 rounded bg-bone/20" />
+          )}
+          {coach.instagram && (
+            <a
+              href={coach.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`${coach.name} on Instagram`}
+              className="mt-5 inline-flex items-center gap-2 rounded-full border border-yellow-500/45 bg-ink/25 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-yellow-400 transition-colors hover:border-yellow-400 hover:bg-yellow-500/15 hover:text-yellow-300"
+            >
+              <InstagramIcon className="h-3.5 w-3.5" />
+              Instagram
+            </a>
           )}
         </div>
       </div>

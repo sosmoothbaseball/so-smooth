@@ -6,6 +6,7 @@ export type StaffCoach = {
   goal?: string;
   experience?: string[];
   honors?: string[];
+  instagram?: string;
   link?: { href: string; label: string };
 };
 
@@ -32,6 +33,7 @@ export const STAFF_COACHES: StaffCoach[] = [
       "Associates degree in Kinesiology & Exercise Science",
     ],
     honors: ["3x First Team All-League", "2025 NCAA All-Region Defensive Team"],
+    instagram: "https://www.instagram.com/coach.carlosvega",
   },
   {
     name: "Roberto Bueno",
@@ -53,6 +55,7 @@ export const STAFF_COACHES: StaffCoach[] = [
       "2023 All-Conference Honors",
       "2026 USA Junior Olympics Gold Medal Champs - Head Coach (Franklin Scout Team)",
     ],
+    instagram: "https://www.instagram.com/buenoo_07",
   },
   {
     name: "Crix Taveras",
@@ -81,6 +84,7 @@ export const STAFF_COACHES: StaffCoach[] = [
       ".561 career slugging percentage",
       ".995 career OPS",
     ],
+    instagram: "https://www.instagram.com/crixtaveras13",
     link: {
       href: "https://www.baseball-reference.com/register/player.fcgi?id=tavera000cri",
       label: "Baseball Reference",
@@ -110,6 +114,7 @@ export const STAFF_COACHES: StaffCoach[] = [
       "Experience developing players in pitching, fielding, baserunning, and overall baseball IQ",
       "Experience working with athletes on pitching mechanics, movement, arm care, and player development",
     ],
+    instagram: "https://www.instagram.com/coach.alexhoward",
   },
 ];
 
