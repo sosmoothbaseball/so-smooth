@@ -47,9 +47,9 @@ function CoachCard({ coach }: { coach: StaffCoach }) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`${coach.name} on Instagram`}
-              className="mt-5 inline-flex items-center gap-2 rounded-full border border-yellow-500/45 bg-ink/25 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-yellow-400 transition-colors hover:border-yellow-400 hover:bg-yellow-500/15 hover:text-yellow-300"
+              className="mt-5 inline-flex items-center gap-2 rounded-full border border-yellow-500/45 bg-ink/25 px-[18px] py-[9px] text-[12px] font-semibold uppercase tracking-[0.2em] text-yellow-400 transition-colors hover:border-yellow-400 hover:bg-yellow-500/15 hover:text-yellow-300"
             >
-              <InstagramIcon className="h-3.5 w-3.5" />
+              <InstagramIcon className="h-4 w-4" />
               Instagram
             </a>
           )}
