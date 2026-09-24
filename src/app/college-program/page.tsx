@@ -79,7 +79,7 @@ export default async function CollegeProgramPage({
 
       <section className="bg-bone py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-6">
-          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16">
+          <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-2 lg:gap-16">
             <div>
               <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-green-600 sm:text-sm">
                 <span className="h-1.5 w-1.5 rounded-full bg-yellow-500" />
@@ -112,13 +112,13 @@ export default async function CollegeProgramPage({
               <div className="bg-grid absolute inset-0 opacity-30" />
               <div className="absolute -bottom-10 -right-10 h-48 w-48 rounded-full bg-green-500/25 blur-3xl" />
               <div className="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-yellow-500/15 blur-3xl" />
-              <div className="relative flex min-h-[22rem] flex-col justify-between p-8 sm:min-h-[26rem] sm:p-10">
-                <GraduationCap className="h-12 w-12 text-yellow-400" />
+              <div className="relative flex flex-col gap-6 p-8 sm:p-9">
+                <GraduationCap className="h-10 w-10 text-yellow-400" />
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-yellow-400">
                     So Smooth
                   </p>
-                  <p className="mt-3 font-display text-4xl uppercase leading-[0.95] tracking-wide text-bone sm:text-5xl">
+                  <p className="mt-2 font-display text-3xl uppercase leading-[0.95] tracking-wide text-bone sm:text-4xl">
                     College Dreams.
                     <br />
                     Real Opportunities.
