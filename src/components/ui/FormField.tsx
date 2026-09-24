@@ -16,6 +16,10 @@ type FieldShellProps = {
 };
 
 function FieldShell({ label, htmlFor, children }: FieldShellProps) {
+  if (!label) {
+    return <div className="flex flex-col justify-end">{children}</div>;
+  }
+
   return (
     <label htmlFor={htmlFor} className="flex flex-col gap-2">
       <span className="text-xs font-semibold uppercase tracking-[0.18em] text-ink/55">

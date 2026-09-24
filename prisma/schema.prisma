@@ -27,7 +27,8 @@ model Profile {
   eventsCreated   UpcomingEvent[]
   eventSignups    EventSignup[]
   calendarEvents  CalendarEvent[]
-  testimonials    Testimonial[]
+  testimonials     Testimonial[]
+  collegePrograms  CollegeProgram[]
 }
 
 model WeeklyHours {
@@ -143,6 +144,24 @@ model Testimonial {
   parent       Profile? @relation(fields: [parentId], references: [id], onDelete: SetNull)
   createdAt    DateTime @default(now())
 
+  @@index([createdAt])
+}
+
+model CollegeProgram {
+  id         String   @id @default(cuid())
+  parentId   String
+  parent     Profile  @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  playerName String
+  height     String
+  weight     String
+  bio        String   @default("")
+  link       String   @default("")
+  stats      Json
+  accolades  Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([parentId])
   @@index([createdAt])
 }
 

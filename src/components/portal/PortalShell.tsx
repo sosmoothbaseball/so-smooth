@@ -10,11 +10,13 @@ const COACH_LINKS = [
   { href: "/portal/coach/events", label: "Add Events" },
   { href: "/portal/coach/careers", label: "Careers" },
   { href: "/portal/coach/testimonials", label: "Testimonials" },
+  { href: "/portal/coach/college-program", label: "College Program" },
   { href: "/portal/coach/profile", label: "Edit Profile" },
 ];
 
 const PARENT_LINKS = [
   { href: "/portal/parent", label: "View Bookings" },
+  { href: "/portal/parent/college-program", label: "College Program" },
   { href: "/portal/parent/profile", label: "Edit Profile" },
 ];
 

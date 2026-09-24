@@ -96,6 +96,7 @@ export default function Footer() {
               { label: "Camps & Clinics", href: "/events" },
               { label: "Travel Teams", href: "/team" },
               { label: "Staff", href: "/staff" },
+              { label: "College Program", href: "/college-program" },
               { label: "Shop", href: "/shop" },
             ].map((program) => (
               <li key={program.label}>

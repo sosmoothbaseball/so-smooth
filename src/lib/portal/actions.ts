@@ -35,7 +35,7 @@ import { normalizePhone, phoneLooksValid, PHONE_REQUIRED_MESSAGE } from "@/lib/p
 import { careerRecentlySent, CAREER_WAIT_MS, markCareerSent } from "@/lib/portal/career-limit";
 import { Prisma } from "@prisma/client";
 import { safeReturnPath } from "@/lib/portal/paths";
-import { isOwnerRole, isStaffRole } from "@/lib/portal/roles";
+import { isOwnerRole, isParentRole, isStaffRole } from "@/lib/portal/roles";
 import {
   markTestimonialSent,
   testimonialRecentlySent,
@@ -49,6 +49,10 @@ import {
   TESTIMONIAL_WAIT_MS,
   testimonialRoleLabel,
 } from "@/lib/portal/testimonials";
+import {
+  COLLEGE_PROGRAM_WAIT_MS,
+  readCollegeProgramForm,
+} from "@/lib/portal/college-program";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -97,6 +101,12 @@ function refreshCareers() {
 function refreshTestimonials() {
   revalidatePath("/");
   revalidatePath("/portal/coach/testimonials");
+}
+
+function refreshCollegePrograms() {
+  revalidatePath("/college-program");
+  revalidatePath("/portal/coach/college-program");
+  revalidatePath("/portal/parent/college-program");
 }
 
 function parentReturnPath(formData: FormData) {
@@ -1072,6 +1082,78 @@ export async function unfeatureTestimonialAction(formData: FormData): Promise<Ac
   });
   if (result.count === 0) return fail("That story is not on the homepage.");
   refreshTestimonials();
+  return ok();
+}
+
+export async function submitCollegeProgramAction(formData: FormData): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session) return fail("Sign in with a family account to submit a college packet.");
+  if (!isParentRole(session.role)) {
+    return fail("Family accounts submit college packets from the College Program page.");
+  }
+
+  const fields = readCollegeProgramForm(formData);
+  if ("error" in fields) return fail(fields.error);
+
+  const recent = await prisma.collegeProgram.findFirst({
+    where: { parentId: session.id, createdAt: { gte: new Date(Date.now() - COLLEGE_PROGRAM_WAIT_MS) } },
+    select: { id: true },
+  });
+  if (recent) {
+    return fail("You already sent a college packet in the last 30 minutes. Edit the one you have, or try again later.");
+  }
+
+  await prisma.collegeProgram.create({
+    data: {
+      parentId: session.id,
+      playerName: fields.playerName,
+      height: fields.height,
+      weight: fields.weight,
+      bio: fields.bio,
+      link: fields.link,
+      stats: fields.stats,
+      accolades: fields.accolades,
+    },
+  });
+  refreshCollegePrograms();
+  return ok();
+}
+
+export async function updateCollegeProgramAction(formData: FormData): Promise<ActionResult> {
+  const parent = await requireParent();
+  const id = String(formData.get("programId") || "");
+  if (!id) return fail("That packet is already gone.");
+
+  const fields = readCollegeProgramForm(formData);
+  if ("error" in fields) return fail(fields.error);
+
+  const result = await prisma.collegeProgram.updateMany({
+    where: { id, parentId: parent.id },
+    data: {
+      playerName: fields.playerName,
+      height: fields.height,
+      weight: fields.weight,
+      bio: fields.bio,
+      link: fields.link,
+      stats: fields.stats,
+      accolades: fields.accolades,
+    },
+  });
+  if (result.count === 0) return fail("That packet is already gone.");
+  refreshCollegePrograms();
+  return ok();
+}
+
+export async function deleteCollegeProgramAction(formData: FormData): Promise<ActionResult> {
+  const user = await getSession();
+  if (!user) return fail("Sign in first.");
+  const id = String(formData.get("programId") || "");
+  if (!id) return fail("That packet is already gone.");
+
+  const where = isStaffRole(user.role) ? { id } : { id, parentId: user.id };
+  const result = await prisma.collegeProgram.deleteMany({ where });
+  if (result.count === 0) return fail("That packet is already gone.");
+  refreshCollegePrograms();
   return ok();
 }
 

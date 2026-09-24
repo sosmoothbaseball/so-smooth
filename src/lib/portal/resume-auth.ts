@@ -3,7 +3,8 @@ const KEY = "so-smooth-resume-auth";
 export type ResumeAuth =
   | { kind: "testimonial" }
   | { kind: "lesson"; slotId: string }
-  | { kind: "event"; eventId: string };
+  | { kind: "event"; eventId: string }
+  | { kind: "college-program" };
 
 export function setResumeAuth(value: ResumeAuth) {
   if (typeof window === "undefined") return;
