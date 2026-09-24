@@ -255,9 +255,6 @@ export function collegeProgramMailto(input: {
     "",
     "LINK",
     input.link || "None listed",
-    "",
-    "—",
-    "Sent from the So Smooth coach portal.",
   ].filter((line, index, list) => line !== "" || list[index - 1] !== "");
 
   const subject = `So Smooth College Program — ${input.playerName}`;

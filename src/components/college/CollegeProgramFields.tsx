@@ -5,7 +5,9 @@ import { Plus, X } from "lucide-react";
 import {
   COLLEGE_ACCOLADES_MAX,
   COLLEGE_POSITION_OPTIONS,
+  COLLEGE_POSITIONS_MAX,
   COLLEGE_STAT_OPTIONS,
+  collegePositionLabel,
   splitCollegeHeight,
   type CollegeStat,
 } from "@/lib/portal/college-program";
@@ -38,6 +40,7 @@ export default function CollegeProgramFields({
   const [positions, setPositions] = useState<string[]>(
     defaults?.positions?.length ? defaults.positions : [],
   );
+  const [positionDraft, setPositionDraft] = useState("");
   const height = splitCollegeHeight(defaults?.height);
 
   function addAccolade() {
@@ -45,6 +48,18 @@ export default function CollegeProgramFields({
     if (!next || accolades.length >= COLLEGE_ACCOLADES_MAX) return;
     setAccolades([...accolades, next]);
     setAccoladeDraft("");
+  }
+
+  function addPosition() {
+    if (
+      !positionDraft ||
+      positions.includes(positionDraft) ||
+      positions.length >= COLLEGE_POSITIONS_MAX
+    ) {
+      return;
+    }
+    setPositions([...positions, positionDraft]);
+    setPositionDraft("");
   }
 
   return (
@@ -95,48 +110,54 @@ export default function CollegeProgramFields({
 
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink/55">Positions</p>
-        <ul className="mt-3 flex flex-col gap-3">
-          {positions.map((item, index) => (
-            <li key={`${idPrefix}-pos-${index}`} className="flex items-end gap-2">
-              <SelectField
-                id={`${idPrefix}-position-${index}`}
-                name="position"
-                label={index === 0 ? "Position" : ""}
-                value={item}
-                onChange={(event) => {
-                  const next = [...positions];
-                  next[index] = event.target.value;
-                  setPositions(next);
-                }}
+        <div className="mt-3 flex items-center gap-2">
+          <SelectField
+            id={`${idPrefix}-position-draft`}
+            label=""
+            value={positionDraft}
+            onChange={(event) => setPositionDraft(event.target.value)}
+          >
+            <option value="">Select a position</option>
+            {COLLEGE_POSITION_OPTIONS.filter((option) => !positions.includes(option.key)).map(
+              (option) => (
+                <option key={option.key} value={option.key}>
+                  {option.label}
+                </option>
+              ),
+            )}
+          </SelectField>
+          <button
+            type="button"
+            aria-label="Add position"
+            onClick={addPosition}
+            className="rounded-full border border-ink/10 p-2 text-ink/40 transition-colors hover:border-green-600 hover:text-green-700"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+        </div>
+        {positions.length > 0 ? (
+          <ul className="mt-3 flex flex-col gap-2">
+            {positions.map((item, index) => (
+              <li
+                key={`${idPrefix}-pos-${index}`}
+                className="flex overflow-hidden rounded-xl border border-ink/10 bg-bone/60"
               >
-                <option value="">Select a position</option>
-                {COLLEGE_POSITION_OPTIONS.map((option) => (
-                  <option key={option.key} value={option.key}>
-                    {option.label}
-                  </option>
-                ))}
-              </SelectField>
-              <button
-                type="button"
-                aria-label="Remove position"
-                onClick={() => setPositions(positions.filter((_, i) => i !== index))}
-                className="mb-1 rounded-full border border-ink/10 p-2 text-ink/40 transition-colors hover:border-red-300 hover:text-red-700"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </li>
-          ))}
-        </ul>
-        <Button
-          type="button"
-          variant="onLight"
-          size="sm"
-          className="mt-3"
-          onClick={() => setPositions([...positions, ""])}
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Add A Position
-        </Button>
+                <input type="hidden" name="position" value={item} />
+                <span className="flex flex-1 items-center px-4 py-2.5 text-sm text-ink/80">
+                  {collegePositionLabel(item)}
+                </span>
+                <button
+                  type="button"
+                  aria-label={`Remove ${collegePositionLabel(item)}`}
+                  onClick={() => setPositions(positions.filter((_, i) => i !== index))}
+                  className="flex w-11 shrink-0 items-center justify-center border-l border-ink/10 text-ink/35 transition-colors hover:bg-red-50 hover:text-red-700"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
 
       <div>
@@ -227,15 +248,17 @@ export default function CollegeProgramFields({
             {accolades.map((item, index) => (
               <li
                 key={`${idPrefix}-acc-${index}`}
-                className="flex items-center justify-between gap-3 rounded-xl border border-ink/10 bg-bone/60 px-4 py-2.5"
+                className="flex overflow-hidden rounded-xl border border-ink/10 bg-bone/60"
               >
                 <input type="hidden" name="accolade" value={item} />
-                <span className="text-sm text-ink/80">{item}</span>
+                <span className="flex flex-1 items-center px-4 py-2.5 text-sm text-ink/80">
+                  {item}
+                </span>
                 <button
                   type="button"
                   aria-label={`Remove ${item}`}
                   onClick={() => setAccolades(accolades.filter((_, i) => i !== index))}
-                  className="rounded-full p-1 text-ink/35 transition-colors hover:text-red-700"
+                  className="flex w-11 shrink-0 items-center justify-center border-l border-ink/10 text-ink/35 transition-colors hover:bg-red-50 hover:text-red-700"
                 >
                   <X className="h-4 w-4" />
                 </button>
