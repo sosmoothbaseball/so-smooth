@@ -6,8 +6,10 @@ import {
   updateCollegeProgramAction,
 } from "@/lib/portal/actions";
 import {
+  collegePositionLabel,
   collegeStatLabel,
   parseCollegeAccolades,
+  parseCollegePositions,
   parseCollegeStats,
 } from "@/lib/portal/college-program";
 import { formatWhen } from "@/lib/portal/dates";
@@ -24,19 +26,15 @@ type Program = {
   link: string;
   stats: unknown;
   accolades: unknown;
+  positions: unknown;
   createdAt: Date;
 };
 
-export default function CollegeProgramCard({
-  program,
-  players,
-}: {
-  program: Program;
-  players: { id: string; name: string }[];
-}) {
+export default function CollegeProgramCard({ program }: { program: Program }) {
   const [editing, setEditing] = useState(false);
   const stats = parseCollegeStats(program.stats);
   const accolades = parseCollegeAccolades(program.accolades);
+  const positions = parseCollegePositions(program.positions);
 
   if (editing) {
     return (
@@ -49,7 +47,6 @@ export default function CollegeProgramCard({
           <input type="hidden" name="programId" value={program.id} />
           <CollegeProgramFields
             idPrefix={`edit-${program.id}`}
-            players={players}
             defaults={{
               playerName: program.playerName,
               height: program.height,
@@ -58,11 +55,12 @@ export default function CollegeProgramCard({
               link: program.link,
               stats,
               accolades,
+              positions,
             }}
           />
           <div className="flex flex-wrap gap-2">
             <Button type="submit" size="sm">
-              Save Packet
+              Save Profile
             </Button>
             <Button type="button" variant="onLight" size="sm" onClick={() => setEditing(false)}>
               Cancel
@@ -80,6 +78,11 @@ export default function CollegeProgramCard({
       <p className="mt-3 text-sm text-ink/70">
         {program.height} · {program.weight}
       </p>
+      {positions.length > 0 ? (
+        <p className="mt-2 text-sm text-ink/70">
+          {positions.map((key) => collegePositionLabel(key)).join(" · ")}
+        </p>
+      ) : null}
       {stats.length > 0 ? (
         <p className="mt-2 text-sm text-ink/70">
           {stats.map((stat) => `${collegeStatLabel(stat.key)} ${stat.value}`).join(" · ")}
@@ -110,8 +113,8 @@ export default function CollegeProgramCard({
         <ActionForm
           action={deleteCollegeProgramAction}
           confirm={{
-            title: "Delete this packet?",
-            message: `Remove ${program.playerName}'s college packet? Coaches will not see it anymore.`,
+            title: "Delete this player profile?",
+            message: `Remove ${program.playerName}'s player profile? Coaches will not see it anymore.`,
             confirmLabel: "Delete",
           }}
         >

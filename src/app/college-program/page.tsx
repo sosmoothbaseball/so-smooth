@@ -10,20 +10,20 @@ import CollegeProgramForm from "@/components/college/CollegeProgramForm";
 export const metadata: Metadata = {
   title: "College Program | So Smooth",
   description:
-    "Build a player packet So Smooth coaches can send to college coaches.",
+    "Build a player profile So Smooth coaches can send to college coaches.",
 };
 
 const STEPS = [
   {
     n: "01",
     title: "Sign in as a family",
-    body: "Packets stay on your account so you can edit them later.",
+    body: "Player profiles stay on your account so you can edit them later.",
     icon: ShieldCheck,
   },
   {
     n: "02",
-    title: "Build the player packet",
-    body: "Name, height, and weight are required. Add only the stats, accolades, bio, and link you want sent.",
+    title: "Build the player profile",
+    body: "Name, height, and weight are required. Add positions, stats, accolades, bio, and a link if you want them sent.",
     icon: NotebookPen,
   },
   {
@@ -44,11 +44,7 @@ export default async function CollegeProgramPage({
     ? { kind: "guest" as const }
     : isStaffRole(session.role)
       ? { kind: "coach" as const }
-      : {
-          kind: "parent" as const,
-          name: session.name,
-          players: session.players.map((player) => ({ id: player.id, name: player.name })),
-        };
+      : { kind: "parent" as const, name: session.name };
 
   return (
     <>
@@ -59,7 +55,7 @@ export default async function CollegeProgramPage({
             College <span className="text-green-400">Program</span>
           </>
         }
-        description="Families fill in a player packet. Coaches can send it to college coaches."
+        description="Families fill in a player profile. Coaches can send it to college coaches."
       />
 
       <section className="bg-bone py-20 sm:py-28">
@@ -91,7 +87,7 @@ export default async function CollegeProgramPage({
             Keep The Work <span className="text-yellow-400">Going</span>
           </>
         }
-        description="College packets sit with the staff. Lessons, camps, and clinics stay on the board for this week."
+        description="Player profiles sit with the staff. Lessons, camps, and clinics stay on the board for this week."
         primary={{ href: "/lessons", label: "Private Lessons" }}
         secondary={{ href: "/events", label: "Upcoming Events" }}
       />

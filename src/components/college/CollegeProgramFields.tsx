@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
 import {
+  COLLEGE_ACCOLADES_MAX,
+  COLLEGE_POSITION_OPTIONS,
   COLLEGE_STAT_OPTIONS,
+  splitCollegeHeight,
   type CollegeStat,
 } from "@/lib/portal/college-program";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/FormField";
@@ -17,62 +20,69 @@ export type CollegeProgramDefaults = {
   link?: string;
   stats?: CollegeStat[];
   accolades?: string[];
+  positions?: string[];
 };
 
 export default function CollegeProgramFields({
   idPrefix,
-  players = [],
   defaults,
 }: {
   idPrefix: string;
-  players?: { id: string; name: string }[];
   defaults?: CollegeProgramDefaults;
 }) {
-  const [playerName, setPlayerName] = useState(defaults?.playerName || "");
   const [stats, setStats] = useState<CollegeStat[]>(defaults?.stats?.length ? defaults.stats : []);
   const [accolades, setAccolades] = useState<string[]>(
     defaults?.accolades?.length ? defaults.accolades : [],
   );
+  const [accoladeDraft, setAccoladeDraft] = useState("");
+  const [positions, setPositions] = useState<string[]>(
+    defaults?.positions?.length ? defaults.positions : [],
+  );
+  const height = splitCollegeHeight(defaults?.height);
+
+  function addAccolade() {
+    const next = accoladeDraft.trim();
+    if (!next || accolades.length >= COLLEGE_ACCOLADES_MAX) return;
+    setAccolades([...accolades, next]);
+    setAccoladeDraft("");
+  }
 
   return (
     <div className="flex flex-col gap-5">
-      {players.length > 0 ? (
-        <SelectField
-          id={`${idPrefix}-player-pick`}
-          name="playerPick"
-          label="Player On This Account"
-          value={players.some((player) => player.name === playerName) ? playerName : ""}
-          onChange={(event) => {
-            if (event.target.value) setPlayerName(event.target.value);
-          }}
-        >
-          <option value="">Type a name or pick a player</option>
-          {players.map((player) => (
-            <option key={player.id} value={player.name}>
-              {player.name}
-            </option>
-          ))}
-        </SelectField>
-      ) : null}
-
       <TextField
         id={`${idPrefix}-player`}
         name="playerName"
         label="Player Name"
-        value={playerName}
-        onChange={(event) => setPlayerName(event.target.value)}
+        defaultValue={defaults?.playerName}
         required
       />
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <TextField
-          id={`${idPrefix}-height`}
-          name="height"
-          label="Height"
-          placeholder={`5'10"`}
-          defaultValue={defaults?.height}
-          required
-        />
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-ink/55">
+            Height
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <TextField
+              id={`${idPrefix}-height-feet`}
+              name="heightFeet"
+              label="Feet"
+              inputMode="numeric"
+              placeholder="5"
+              defaultValue={height.feet}
+              required
+            />
+            <TextField
+              id={`${idPrefix}-height-inches`}
+              name="heightInches"
+              label="Inches"
+              inputMode="numeric"
+              placeholder="10"
+              defaultValue={height.inches}
+              required
+            />
+          </div>
+        </div>
         <TextField
           id={`${idPrefix}-weight`}
           name="weight"
@@ -81,6 +91,52 @@ export default function CollegeProgramFields({
           defaultValue={defaults?.weight}
           required
         />
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink/55">Positions</p>
+        <ul className="mt-3 flex flex-col gap-3">
+          {positions.map((item, index) => (
+            <li key={`${idPrefix}-pos-${index}`} className="flex items-end gap-2">
+              <SelectField
+                id={`${idPrefix}-position-${index}`}
+                name="position"
+                label={index === 0 ? "Position" : ""}
+                value={item}
+                onChange={(event) => {
+                  const next = [...positions];
+                  next[index] = event.target.value;
+                  setPositions(next);
+                }}
+              >
+                <option value="">Select a position</option>
+                {COLLEGE_POSITION_OPTIONS.map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.label}
+                  </option>
+                ))}
+              </SelectField>
+              <button
+                type="button"
+                aria-label="Remove position"
+                onClick={() => setPositions(positions.filter((_, i) => i !== index))}
+                className="mb-1 rounded-full border border-ink/10 p-2 text-ink/40 transition-colors hover:border-red-300 hover:text-red-700"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </li>
+          ))}
+        </ul>
+        <Button
+          type="button"
+          variant="onLight"
+          size="sm"
+          className="mt-3"
+          onClick={() => setPositions([...positions, ""])}
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Add A Position
+        </Button>
       </div>
 
       <div>
@@ -144,42 +200,49 @@ export default function CollegeProgramFields({
 
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink/55">Accolades</p>
-        <ul className="mt-3 flex flex-col gap-3">
-          {accolades.map((item, index) => (
-            <li key={`${idPrefix}-acc-${index}`} className="flex items-end gap-2">
-              <TextField
-                id={`${idPrefix}-accolade-${index}`}
-                name="accolade"
-                label={index === 0 ? "Accolade" : ""}
-                value={item}
-                onChange={(event) => {
-                  const next = [...accolades];
-                  next[index] = event.target.value;
-                  setAccolades(next);
-                }}
-                placeholder="First Team All-Conference"
-              />
-              <button
-                type="button"
-                aria-label="Remove accolade"
-                onClick={() => setAccolades(accolades.filter((_, i) => i !== index))}
-                className="mb-1 rounded-full border border-ink/10 p-2 text-ink/40 transition-colors hover:border-red-300 hover:text-red-700"
+        <div className="mt-3 flex items-center gap-2">
+          <TextField
+            id={`${idPrefix}-accolade-draft`}
+            label=""
+            value={accoladeDraft}
+            onChange={(event) => setAccoladeDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key !== "Enter") return;
+              event.preventDefault();
+              addAccolade();
+            }}
+            placeholder="First Team All-Conference"
+          />
+          <button
+            type="button"
+            aria-label="Add accolade"
+            onClick={addAccolade}
+            className="rounded-full border border-ink/10 p-2 text-ink/40 transition-colors hover:border-green-600 hover:text-green-700"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+        </div>
+        {accolades.length > 0 ? (
+          <ul className="mt-3 flex flex-col gap-2">
+            {accolades.map((item, index) => (
+              <li
+                key={`${idPrefix}-acc-${index}`}
+                className="flex items-center justify-between gap-3 rounded-xl border border-ink/10 bg-bone/60 px-4 py-2.5"
               >
-                <X className="h-4 w-4" />
-              </button>
-            </li>
-          ))}
-        </ul>
-        <Button
-          type="button"
-          variant="onLight"
-          size="sm"
-          className="mt-3"
-          onClick={() => setAccolades([...accolades, ""])}
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Add An Accolade
-        </Button>
+                <input type="hidden" name="accolade" value={item} />
+                <span className="text-sm text-ink/80">{item}</span>
+                <button
+                  type="button"
+                  aria-label={`Remove ${item}`}
+                  onClick={() => setAccolades(accolades.filter((_, i) => i !== index))}
+                  className="rounded-full p-1 text-ink/35 transition-colors hover:text-red-700"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
 
       <TextField

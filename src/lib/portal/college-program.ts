@@ -30,6 +30,29 @@ export type CollegeStat = {
 
 export const COLLEGE_STAT_KEYS = new Set<string>(COLLEGE_STAT_OPTIONS.map((option) => option.key));
 
+export const COLLEGE_POSITION_OPTIONS = [
+  { key: "p", label: "Pitcher" },
+  { key: "c", label: "Catcher" },
+  { key: "1b", label: "First Base" },
+  { key: "2b", label: "Second Base" },
+  { key: "3b", label: "Third Base" },
+  { key: "ss", label: "Shortstop" },
+  { key: "lf", label: "Left Field" },
+  { key: "cf", label: "Center Field" },
+  { key: "rf", label: "Right Field" },
+  { key: "dh", label: "Designated Hitter" },
+  { key: "util", label: "Utility" },
+  { key: "inf", label: "Infield" },
+  { key: "of", label: "Outfield" },
+  { key: "rhp", label: "Right-Handed Pitcher" },
+  { key: "lhp", label: "Left-Handed Pitcher" },
+  { key: "2w", label: "Two-Way" },
+] as const;
+
+export const COLLEGE_POSITION_KEYS = new Set<string>(
+  COLLEGE_POSITION_OPTIONS.map((option) => option.key),
+);
+
 export const COLLEGE_PROGRAM_WAIT_MS = 30 * 60 * 1000;
 export const COLLEGE_NAME_MAX = 80;
 export const COLLEGE_BIO_MAX = 4000;
@@ -39,9 +62,23 @@ export const COLLEGE_STAT_VALUE_MAX = 24;
 export const COLLEGE_ACCOLADE_MAX = 120;
 export const COLLEGE_STATS_MAX = 12;
 export const COLLEGE_ACCOLADES_MAX = 12;
+export const COLLEGE_POSITIONS_MAX = 8;
 
 export function collegeStatLabel(key: string) {
   return COLLEGE_STAT_OPTIONS.find((option) => option.key === key)?.label || key.toUpperCase();
+}
+
+export function collegePositionLabel(key: string) {
+  return COLLEGE_POSITION_OPTIONS.find((option) => option.key === key)?.label || key.toUpperCase();
+}
+
+export function parseCollegePositions(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  return value
+    .map((item) => String(item || "").trim())
+    .filter((key) => COLLEGE_POSITION_KEYS.has(key) && !seen.has(key) && seen.add(key))
+    .slice(0, COLLEGE_POSITIONS_MAX);
 }
 
 export function parseCollegeStats(value: unknown): CollegeStat[] {
@@ -56,6 +93,24 @@ export function parseCollegeStats(value: unknown): CollegeStat[] {
     })
     .filter((row): row is CollegeStat => Boolean(row))
     .slice(0, COLLEGE_STATS_MAX);
+}
+
+export function splitCollegeHeight(height = "") {
+  const match = String(height).match(/(\d+)\s*'\s*(\d+)/);
+  if (!match) return { feet: "", inches: "" };
+  return { feet: match[1], inches: match[2] };
+}
+
+export function formatCollegeHeight(feetRaw: string, inchesRaw: string) {
+  const feet = Number(feetRaw);
+  const inches = Number(inchesRaw);
+  if (!Number.isInteger(feet) || feet < 3 || feet > 8) {
+    return { error: "Enter height in feet, like 5 or 6." };
+  }
+  if (!Number.isInteger(inches) || inches < 0 || inches > 11) {
+    return { error: "Inches should be a number from 0 to 11." };
+  }
+  return { height: `${feet}'${inches}"` };
 }
 
 export function parseCollegeAccolades(value: unknown): string[] {
@@ -75,13 +130,19 @@ type CollegeProgramFields = {
   link: string;
   stats: CollegeStat[];
   accolades: string[];
+  positions: string[];
 };
 
 export function readCollegeProgramForm(
   formData: FormData,
 ): CollegeProgramFields | { error: string } {
   const playerName = String(formData.get("playerName") || "").trim();
-  const height = String(formData.get("height") || "").trim();
+  const formattedHeight = formatCollegeHeight(
+    String(formData.get("heightFeet") || "").trim(),
+    String(formData.get("heightInches") || "").trim(),
+  );
+  if ("error" in formattedHeight) return { error: formattedHeight.error };
+  const height = formattedHeight.height;
   const weight = String(formData.get("weight") || "").trim();
   const bio = String(formData.get("bio") || "").trim();
   const link = String(formData.get("link") || "").trim();
@@ -94,13 +155,15 @@ export function readCollegeProgramForm(
     .getAll("accolade")
     .map((value) => String(value).trim())
     .filter(Boolean);
+  const positions = formData
+    .getAll("position")
+    .map((value) => String(value).trim())
+    .filter(Boolean);
 
   if (playerName.length < 2) return { error: "Enter the player's name." };
   if (playerName.length > COLLEGE_NAME_MAX) {
     return { error: `Keep the player name under ${COLLEGE_NAME_MAX} characters.` };
   }
-  if (height.length < 2) return { error: "Add the player's height." };
-  if (height.length > COLLEGE_PHYS_MAX) return { error: "Keep height short, like 5'10\"." };
   if (weight.length < 2) return { error: "Add the player's weight." };
   if (weight.length > COLLEGE_PHYS_MAX) return { error: "Keep weight short, like 165 lbs." };
   if (bio.length > COLLEGE_BIO_MAX) {
@@ -125,6 +188,12 @@ export function readCollegeProgramForm(
   if (accolades.some((item) => item.length > COLLEGE_ACCOLADE_MAX)) {
     return { error: "Keep each accolade a little shorter." };
   }
+  if (positions.length > COLLEGE_POSITIONS_MAX) {
+    return { error: `You can add up to ${COLLEGE_POSITIONS_MAX} positions.` };
+  }
+  if (positions.some((key) => !COLLEGE_POSITION_KEYS.has(key))) {
+    return { error: "Pick a position from the list." };
+  }
 
   return {
     playerName,
@@ -134,6 +203,7 @@ export function readCollegeProgramForm(
     link,
     stats: parseCollegeStats(stats),
     accolades: parseCollegeAccolades(accolades),
+    positions: parseCollegePositions(positions),
   };
 }
 
@@ -146,17 +216,23 @@ export function collegeProgramMailto(input: {
   weight: string;
   stats: CollegeStat[];
   accolades: string[];
+  positions: string[];
   bio: string;
   link: string;
 }) {
   const lines = [
     "SO SMOOTH BASEBALL",
-    "College Program Packet",
+    "College Program Player Profile",
     "",
     "PLAYER",
     `Name: ${input.playerName}`,
     `Height: ${input.height}`,
     `Weight: ${input.weight}`,
+    "",
+    "POSITIONS",
+    ...(input.positions.length
+      ? input.positions.map((key) => `• ${collegePositionLabel(key)}`)
+      : ["None listed"]),
     "",
     "FAMILY",
     `Parent: ${input.parentName}`,

@@ -19,14 +19,14 @@ export default async function CoachCollegeProgramPage({
     <PortalShell user={user} pathname="/portal/coach/college-program">
       <PortalPanel
         title="College Program"
-        description="Family packets. Open one, tap Email to send it from your mail app, or tap X to remove it."
+        description="Family player profiles. Open one, tap Email to send it, or tap X to remove it."
       >
         <p className="mb-4 text-xs uppercase tracking-wide text-ink/40">
-          {total} {total === 1 ? "packet" : "packets"}
+          {total} {total === 1 ? "profile" : "profiles"}
         </p>
         <ul className="flex flex-col gap-3">
           {items.length === 0 ? (
-            <li className="text-sm text-ink/50">No college packets yet.</li>
+            <li className="text-sm text-ink/50">No player profiles yet.</li>
           ) : (
             items.map((program) => <CollegeProgramRow key={program.id} program={program} />)
           )}

@@ -10,10 +10,7 @@ import AuthDialog from "@/components/portal/AuthDialog";
 import Button from "@/components/ui/Button";
 import CollegeProgramFields from "@/components/college/CollegeProgramFields";
 
-type Viewer =
-  | { kind: "guest" }
-  | { kind: "coach" }
-  | { kind: "parent"; name: string; players: { id: string; name: string }[] };
+type Viewer = { kind: "guest" } | { kind: "coach" } | { kind: "parent"; name: string };
 
 export default function CollegeProgramForm({
   viewer,
@@ -72,7 +69,7 @@ export default function CollegeProgramForm({
     return (
       <div className="mt-10 flex justify-center">
         <Button href="/portal/coach/college-program" size="lg">
-          Open College Packets
+          Open Player Profiles
           <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
@@ -83,7 +80,7 @@ export default function CollegeProgramForm({
     <>
       <div className="mt-10 flex justify-center">
         <Button type="button" size="lg" onClick={startPacket}>
-          Build A Packet
+          Add Player Profile
           <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
@@ -113,7 +110,7 @@ export default function CollegeProgramForm({
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-green-700">
-                  Player Packet
+                  Player Profile
                 </p>
                 <h3
                   id={titleId}
@@ -137,12 +134,12 @@ export default function CollegeProgramForm({
 
             {sent ? (
               <div className="mt-6">
-                <p className="font-display text-3xl uppercase tracking-wide text-ink">Packet In</p>
+                <p className="font-display text-3xl uppercase tracking-wide text-ink">Profile In</p>
                 <p className="mt-2 text-sm leading-relaxed text-ink/60">
                   You can edit or delete it from your family portal.
                 </p>
                 <Button href="/portal/parent/college-program" variant="onLight" className="mt-5">
-                  View Your Packets
+                  View Your Profiles
                 </Button>
               </div>
             ) : (
@@ -150,19 +147,15 @@ export default function CollegeProgramForm({
                 action={submitCollegeProgramAction}
                 className="mt-6 flex flex-col gap-5"
                 confirm={{
-                  title: "Send this college packet?",
+                  title: "Send this player profile?",
                   message: "This will be submitted to So Smooth coaches.",
-                  confirmLabel: "Submit Packet",
+                  confirmLabel: "Submit Profile",
                 }}
                 onSuccess={() => setSent(true)}
               >
-                <CollegeProgramFields
-                  idPrefix="college"
-                  players={viewer.players}
-                  defaults={{ playerName: viewer.players[0]?.name || "" }}
-                />
+                <CollegeProgramFields idPrefix="college" />
                 <Button type="submit">
-                  Submit Packet
+                  Submit Profile
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </ActionForm>

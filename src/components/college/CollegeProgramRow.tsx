@@ -1,9 +1,11 @@
 import { Mail, X } from "lucide-react";
 import { deleteCollegeProgramAction } from "@/lib/portal/actions";
 import {
+  collegePositionLabel,
   collegeProgramMailto,
   collegeStatLabel,
   parseCollegeAccolades,
+  parseCollegePositions,
   parseCollegeStats,
 } from "@/lib/portal/college-program";
 import { formatWhen } from "@/lib/portal/dates";
@@ -18,6 +20,7 @@ type Program = {
   link: string;
   stats: unknown;
   accolades: unknown;
+  positions: unknown;
   createdAt: Date;
   parent: { name: string; email: string; phone: string };
 };
@@ -25,6 +28,7 @@ type Program = {
 export default function CollegeProgramRow({ program }: { program: Program }) {
   const stats = parseCollegeStats(program.stats);
   const accolades = parseCollegeAccolades(program.accolades);
+  const positions = parseCollegePositions(program.positions);
   const mailto = collegeProgramMailto({
     playerName: program.playerName,
     parentName: program.parent.name,
@@ -34,6 +38,7 @@ export default function CollegeProgramRow({ program }: { program: Program }) {
     weight: program.weight,
     stats,
     accolades,
+    positions,
     bio: program.bio,
     link: program.link,
   });
@@ -61,8 +66,8 @@ export default function CollegeProgramRow({ program }: { program: Program }) {
           <ActionForm
             action={deleteCollegeProgramAction}
             confirm={{
-              title: "Remove this packet?",
-              message: `Delete ${program.playerName}'s college packet? This cannot be undone.`,
+              title: "Remove this player profile?",
+              message: `Delete ${program.playerName}'s player profile? This cannot be undone.`,
               confirmLabel: "Remove",
             }}
           >
@@ -81,6 +86,11 @@ export default function CollegeProgramRow({ program }: { program: Program }) {
       <p className="mt-3 text-sm text-ink/70">
         {program.height} · {program.weight}
       </p>
+      {positions.length > 0 ? (
+        <p className="mt-2 text-sm text-ink/70">
+          {positions.map((key) => collegePositionLabel(key)).join(" · ")}
+        </p>
+      ) : null}
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink/70">
         <a href={`mailto:${program.parent.email}`} className="hover:text-green-700">
           {program.parent.email}

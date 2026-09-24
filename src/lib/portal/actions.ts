@@ -1087,9 +1087,9 @@ export async function unfeatureTestimonialAction(formData: FormData): Promise<Ac
 
 export async function submitCollegeProgramAction(formData: FormData): Promise<ActionResult> {
   const session = await getSession();
-  if (!session) return fail("Sign in with a family account to submit a college packet.");
+  if (!session) return fail("Sign in with a family account to submit a player profile.");
   if (!isParentRole(session.role)) {
-    return fail("Family accounts submit college packets from the College Program page.");
+    return fail("Family accounts submit player profiles from the College Program page.");
   }
 
   const fields = readCollegeProgramForm(formData);
@@ -1100,7 +1100,7 @@ export async function submitCollegeProgramAction(formData: FormData): Promise<Ac
     select: { id: true },
   });
   if (recent) {
-    return fail("You already sent a college packet in the last 30 minutes. Edit the one you have, or try again later.");
+    return fail("You already sent a player profile in the last 30 minutes. Edit the one you have, or try again later.");
   }
 
   await prisma.collegeProgram.create({
@@ -1113,6 +1113,7 @@ export async function submitCollegeProgramAction(formData: FormData): Promise<Ac
       link: fields.link,
       stats: fields.stats,
       accolades: fields.accolades,
+      positions: fields.positions,
     },
   });
   refreshCollegePrograms();
@@ -1122,7 +1123,7 @@ export async function submitCollegeProgramAction(formData: FormData): Promise<Ac
 export async function updateCollegeProgramAction(formData: FormData): Promise<ActionResult> {
   const parent = await requireParent();
   const id = String(formData.get("programId") || "");
-  if (!id) return fail("That packet is already gone.");
+  if (!id) return fail("That player profile is already gone.");
 
   const fields = readCollegeProgramForm(formData);
   if ("error" in fields) return fail(fields.error);
@@ -1137,9 +1138,10 @@ export async function updateCollegeProgramAction(formData: FormData): Promise<Ac
       link: fields.link,
       stats: fields.stats,
       accolades: fields.accolades,
+      positions: fields.positions,
     },
   });
-  if (result.count === 0) return fail("That packet is already gone.");
+  if (result.count === 0) return fail("That player profile is already gone.");
   refreshCollegePrograms();
   return ok();
 }
@@ -1148,11 +1150,11 @@ export async function deleteCollegeProgramAction(formData: FormData): Promise<Ac
   const user = await getSession();
   if (!user) return fail("Sign in first.");
   const id = String(formData.get("programId") || "");
-  if (!id) return fail("That packet is already gone.");
+  if (!id) return fail("That player profile is already gone.");
 
   const where = isStaffRole(user.role) ? { id } : { id, parentId: user.id };
   const result = await prisma.collegeProgram.deleteMany({ where });
-  if (result.count === 0) return fail("That packet is already gone.");
+  if (result.count === 0) return fail("That player profile is already gone.");
   refreshCollegePrograms();
   return ok();
 }
