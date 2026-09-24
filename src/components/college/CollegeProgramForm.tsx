@@ -119,7 +119,7 @@ export default function CollegeProgramForm({
                   Send It To The Staff
                 </h3>
                 <p className="mt-2 text-sm leading-relaxed text-ink/60">
-                  This will be submitted to So Smooth coaches.
+                  Staff will use this profile to introduce your player to college coaches.
                 </p>
               </div>
               <button
@@ -148,7 +148,7 @@ export default function CollegeProgramForm({
                 className="mt-6 flex flex-col gap-5"
                 confirm={{
                   title: "Send this player profile?",
-                  message: "This will be submitted to So Smooth coaches.",
+                  message: "Staff will use this profile to introduce your player to college coaches.",
                   confirmLabel: "Submit Profile",
                 }}
                 onSuccess={() => setSent(true)}
