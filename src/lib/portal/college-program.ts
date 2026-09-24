@@ -101,7 +101,10 @@ export function splitCollegeHeight(height = "") {
   return { feet: match[1], inches: match[2] };
 }
 
-export function formatCollegeHeight(feetRaw: string, inchesRaw: string) {
+export function formatCollegeHeight(
+  feetRaw: string,
+  inchesRaw: string,
+): { height: string } | { error: string } {
   const feet = Number(feetRaw);
   const inches = Number(inchesRaw);
   if (!Number.isInteger(feet) || feet < 3 || feet > 8) {
