@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import PageHero from "@/components/ui/PageHero";
 import { StaggerGroup, StaggerItem } from "@/components/ui/Stagger";
 import CTASection from "@/components/home/CTASection";
@@ -24,14 +25,32 @@ function CoachCard({ coach }: { coach: StaffCoach }) {
       id={coach.slug}
       className="flex h-full flex-col overflow-hidden rounded-3xl border border-ink/10 bg-white shadow-[0_24px_50px_-28px_rgba(7,16,12,0.35)] scroll-mt-28"
     >
-      <div className="relative bg-green-800 px-8 py-10">
-        <div className="bg-grid absolute inset-0 opacity-30" />
-        <div className="absolute -left-10 top-8 h-32 w-32 rounded-full bg-yellow-500/15 blur-3xl" />
-        <div className="relative flex flex-col items-center text-center">
-          <div className="flex h-28 w-28 items-center justify-center rounded-full bg-ink text-bone ring-2 ring-yellow-500">
-            <span className="font-display text-4xl">{coach.initials}</span>
+      <div className="relative bg-green-800">
+        {coach.photo ? (
+          <div className="relative aspect-square overflow-hidden bg-green-950">
+            <Image
+              src={coach.photo}
+              alt={coach.name}
+              fill
+              sizes="(max-width: 1024px) 100vw, 36rem"
+              className={`object-cover ${coach.photoPosition ?? "object-top"}`}
+            />
           </div>
-          <h2 className="mt-6 font-display text-4xl uppercase tracking-wide text-bone sm:text-5xl">
+        ) : (
+          <div className="relative px-8 py-10">
+            <div className="bg-grid absolute inset-0 opacity-30" />
+            <div className="absolute -left-10 top-8 h-32 w-32 rounded-full bg-yellow-500/15 blur-3xl" />
+            <div className="relative flex justify-center">
+              <div className="flex h-28 w-28 items-center justify-center rounded-full bg-ink text-bone ring-2 ring-yellow-500">
+                <span className="font-display text-4xl">{coach.initials}</span>
+              </div>
+            </div>
+          </div>
+        )}
+        <div className="relative px-8 py-8">
+          <div className="bg-grid absolute inset-0 opacity-30" />
+          <div className="relative flex flex-col items-center text-center">
+          <h2 className="font-display text-4xl uppercase tracking-wide text-bone sm:text-5xl">
             {coach.name}
           </h2>
           {coach.role ? (
@@ -53,6 +72,7 @@ function CoachCard({ coach }: { coach: StaffCoach }) {
               Instagram
             </a>
           )}
+          </div>
         </div>
       </div>
 
