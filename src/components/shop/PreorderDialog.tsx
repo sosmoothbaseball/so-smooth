@@ -55,7 +55,7 @@ export default function PreorderDialog({ onClose }: { onClose: () => void }) {
     >
       <div className="bg-grid pointer-events-none absolute inset-0 opacity-30" />
       <div className="relative flex items-center justify-between gap-4 border-b border-white/10 px-4 py-3 sm:px-6">
-        <p className="font-display text-2xl uppercase tracking-wide text-bone">Pre-Order</p>
+        <p className="font-display text-2xl uppercase tracking-wide text-bone">Pre-Order List</p>
         <button
           type="button"
           aria-label="Close pre-order"

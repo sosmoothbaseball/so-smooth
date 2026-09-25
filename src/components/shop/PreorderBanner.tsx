@@ -27,7 +27,7 @@ export default function PreorderBanner() {
             </p>
             <div className="mt-7">
               <Button type="button" variant="secondary" size="lg" onClick={() => setOpen(true)}>
-                Preorder
+                Join the List
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
@@ -37,7 +37,7 @@ export default function PreorderBanner() {
             type="button"
             onClick={() => setOpen(true)}
             className="relative min-h-[16rem] bg-white sm:min-h-[20rem]"
-            aria-label={`Preorder ${PREORDER_PRODUCT.title}`}
+            aria-label={`Join the list for ${PREORDER_PRODUCT.title}`}
           >
             <Image
               src={PREORDER_PRODUCT.images[0].src}

@@ -16,8 +16,7 @@ export default function PreorderForm() {
       <div className="rounded-2xl border border-green-600/20 bg-green-500/5 px-5 py-6">
         <p className="font-display text-3xl uppercase tracking-wide text-ink">You&apos;re on the list</p>
         <p className="mt-2 text-sm leading-relaxed text-ink/60">
-          Staff can see this pre-order in the coach portal and will reach out about size, price,
-          and pickup.
+          You&apos;re signed up for the So Smooth Glove pre-order.
         </p>
       </div>
     );
@@ -59,7 +58,7 @@ export default function PreorderForm() {
       </SelectField>
       <div className="flex justify-end">
         <Button type="submit" size="lg">
-          Submit Pre-Order
+          Join the List
           <ArrowRight className="h-4 w-4" />
         </Button>
       </div>

@@ -19,7 +19,7 @@ export default async function CoachPreOrdersPage({
     <PortalShell user={user} pathname="/portal/coach/pre-orders">
       <PortalPanel
         title="Pre Orders"
-        description="Families who reserved the So Smooth Glove from the shop banner. Reach out, or tap X to remove one."
+        description="Families on the So Smooth Glove pre-order list. Reach out, or tap X to remove one."
       >
         <p className="mb-4 text-xs uppercase tracking-wide text-ink/40">
           {total} {total === 1 ? "pre-order" : "pre-orders"}

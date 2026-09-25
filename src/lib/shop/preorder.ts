@@ -16,14 +16,13 @@ export type GloveSize = (typeof GLOVE_SIZES)[number];
 export const PREORDER_PRODUCT = {
   slug: "so-smooth-glove",
   title: "So Smooth Glove",
-  eyebrow: "Limited Pre-Order",
-  bannerLine: "Cream or black. Reserve yours before the drop.",
+  eyebrow: "Join the List",
+  bannerLine: "Join the pre-order list. Cream or black.",
   description:
-    "The So Smooth Glove in cream or black, with green lace, gold stitch, and the interlocking SS. This drop is not in the Shopify shop yet. Pre-order with your size and staff will follow up on color, price, timing, and pickup.",
+    "The So Smooth Glove in cream or black, with green lace, gold stitch, and the interlocking SS. Sign up with your size to get on the list.",
   points: [
     "Two colorways: cream and black",
     "Sized for 10U through 14U travel players",
-    "Staff reaches out after you submit — no checkout yet",
   ],
   images: [
     {
