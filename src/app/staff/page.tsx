@@ -27,29 +27,16 @@ function CoachCard({ coach }: { coach: StaffCoach }) {
     >
       <div className="relative bg-green-800">
         {coach.photo ? (
-          coach.photoFit === "contain" ? (
-            <div className="relative bg-black">
-              <Image
-                src={coach.photo}
-                alt={coach.name}
-                width={470}
-                height={1024}
-                quality={95}
-                className="h-auto w-full"
-              />
-            </div>
-          ) : (
-            <div className="relative aspect-square overflow-hidden bg-green-950">
-              <Image
-                src={coach.photo}
-                alt={coach.name}
-                fill
-                quality={95}
-                sizes="(max-width: 1024px) 100vw, 40rem"
-                className={`object-cover ${coach.photoPosition ?? "object-top"}`}
-              />
-            </div>
-          )
+          <div className="relative aspect-square overflow-hidden bg-green-950">
+            <Image
+              src={coach.photo}
+              alt={coach.name}
+              fill
+              quality={95}
+              sizes="(max-width: 1024px) 100vw, 40rem"
+              className={`${coach.photoFit === "contain" ? "object-contain" : "object-cover"} ${coach.photoPosition ?? "object-top"}`}
+            />
+          </div>
         ) : (
           <div className="relative px-8 py-10">
             <div className="bg-grid absolute inset-0 opacity-30" />
