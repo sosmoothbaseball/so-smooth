@@ -10,16 +10,19 @@ export type PreOrderRowData = {
   email: string;
   phone: string;
   gloveSize: string;
+  color: string;
   createdAt: Date;
 };
 
 export default function PreOrderRow({ order }: { order: PreOrderRowData }) {
+  const spec = [order.productName, order.color, order.gloveSize].filter(Boolean).join(" · ");
+
   return (
     <li className="rounded-2xl border border-ink/10 px-4 py-4">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-green-700">
-            {order.productName} · {order.gloveSize}
+            {spec}
           </p>
           <p className="mt-1 font-display text-2xl uppercase tracking-wide text-ink">
             {order.name}
@@ -52,7 +55,7 @@ export default function PreOrderRow({ order }: { order: PreOrderRowData }) {
         <a href={`tel:${order.phone}`} className="hover:text-green-700">
           {order.phone}
         </a>
-        <span>Glove {order.gloveSize}</span>
+        <span>{[order.color, order.gloveSize].filter(Boolean).join(" · ")}</span>
       </div>
     </li>
   );

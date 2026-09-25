@@ -34,7 +34,7 @@ import { clearPasswordResetSession, hasPasswordResetSession } from "@/lib/portal
 import { normalizePhone, phoneLooksValid, PHONE_REQUIRED_MESSAGE } from "@/lib/portal/phone";
 import { careerRecentlySent, CAREER_WAIT_MS, markCareerSent } from "@/lib/portal/career-limit";
 import { markPreorderSent, PREORDER_WAIT_MS, preorderRecentlySent } from "@/lib/portal/preorder-limit";
-import { isGloveSize, PREORDER_PRODUCT } from "@/lib/shop/preorder";
+import { isGloveColor, isGloveSize, PREORDER_PRODUCT } from "@/lib/shop/preorder";
 import { Prisma } from "@prisma/client";
 import { safeReturnPath } from "@/lib/portal/paths";
 import { isOwnerRole, isParentRole, isStaffRole } from "@/lib/portal/roles";
@@ -980,15 +980,17 @@ export async function submitPreOrderAction(formData: FormData): Promise<ActionRe
     .toLowerCase();
   const phone = normalizePhone(String(formData.get("phone") || ""));
   const gloveSize = String(formData.get("gloveSize") || "").trim();
+  const color = String(formData.get("color") || "").trim();
   const productSlug = String(formData.get("productSlug") || "").trim();
 
-  if (!name || !email || !phone || !gloveSize) {
-    return fail("Name, email, phone, and glove size are required.");
+  if (!name || !email || !phone || !gloveSize || !color) {
+    return fail("Name, email, phone, glove size, and color are required.");
   }
   if (name.length > 80) return fail("Keep the name under 80 characters.");
   if (!email.includes("@") || email.length > 120) return fail("Enter a valid email.");
   if (!phoneLooksValid(phone)) return fail(PHONE_REQUIRED_MESSAGE);
   if (!isGloveSize(gloveSize)) return fail("Pick a glove size.");
+  if (!isGloveColor(color)) return fail("Pick a color.");
   if (productSlug !== PREORDER_PRODUCT.slug) return fail("That pre-order is no longer open.");
   if (await preorderRecentlySent()) {
     return fail("You already sent a pre-order in the last 30 minutes. Try again later.");
@@ -1009,6 +1011,7 @@ export async function submitPreOrderAction(formData: FormData): Promise<ActionRe
       email,
       phone,
       gloveSize,
+      color,
     },
   });
   await markPreorderSent();

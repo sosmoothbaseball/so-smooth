@@ -185,6 +185,7 @@ model PreOrder {
   email       String
   phone       String
   gloveSize   String
+  color       String   @default("")
   createdAt   DateTime @default(now())
 
   @@index([createdAt])

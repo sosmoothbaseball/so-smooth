@@ -1,6 +1,8 @@
 export const GLOVE_SIZES = ['9.5"', '11.25"', '11.5"', '11.75"'] as const;
+export const GLOVE_COLORS = ["Tan", "Black"] as const;
 
 export type GloveSize = (typeof GLOVE_SIZES)[number];
+export type GloveColor = (typeof GLOVE_COLORS)[number];
 
 export const PREORDER_PRODUCT = {
   slug: "so-smooth-glove",
@@ -29,4 +31,8 @@ export const PREORDER_PRODUCT = {
 
 export function isGloveSize(value: string): value is GloveSize {
   return (GLOVE_SIZES as readonly string[]).includes(value);
+}
+
+export function isGloveColor(value: string): value is GloveColor {
+  return (GLOVE_COLORS as readonly string[]).includes(value);
 }
