@@ -9,6 +9,7 @@ const COACH_LINKS = [
   { href: "/portal/coach/calendar", label: "Calendar" },
   { href: "/portal/coach/events", label: "Add Events" },
   { href: "/portal/coach/careers", label: "Careers" },
+  { href: "/portal/coach/pre-orders", label: "Pre Orders" },
   { href: "/portal/coach/testimonials", label: "Testimonials" },
   { href: "/portal/coach/college-program", label: "College Program" },
   { href: "/portal/coach/profile", label: "Edit Profile" },

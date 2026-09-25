@@ -154,6 +154,7 @@ export function getParentEventSignups(parentId: string) {
 export const CAREER_PAGE_SIZE = 8;
 export const TESTIMONIAL_PAGE_SIZE = 8;
 export const COLLEGE_PROGRAM_PAGE_SIZE = 8;
+export const PREORDER_PAGE_SIZE = 8;
 
 export function getFeaturedTestimonials() {
   return prisma.testimonial.findMany({
@@ -217,6 +218,24 @@ export function getCareerSubmissionPage(page = 1) {
     total,
     page: safePage,
     pageCount: Math.max(1, Math.ceil(total / CAREER_PAGE_SIZE)),
+  }));
+}
+
+export function getPreOrderPage(page = 1) {
+  const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+  const skip = (safePage - 1) * PREORDER_PAGE_SIZE;
+  return Promise.all([
+    prisma.preOrder.findMany({
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: PREORDER_PAGE_SIZE,
+    }),
+    prisma.preOrder.count(),
+  ]).then(([items, total]) => ({
+    items,
+    total,
+    page: safePage,
+    pageCount: Math.max(1, Math.ceil(total / PREORDER_PAGE_SIZE)),
   }));
 }
 

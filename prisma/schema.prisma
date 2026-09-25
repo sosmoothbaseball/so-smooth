@@ -176,3 +176,17 @@ model CalendarEvent {
   createdById String
   createdBy   Profile  @relation(fields: [createdById], references: [id], onDelete: Cascade)
 }
+
+model PreOrder {
+  id          String   @id @default(cuid())
+  productSlug String
+  productName String
+  name        String
+  email       String
+  phone       String
+  gloveSize   String
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([email])
+}

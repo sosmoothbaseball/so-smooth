@@ -33,6 +33,8 @@ import { passwordMeetsRules, PASSWORD_RULES_MESSAGE } from "@/lib/portal/passwor
 import { clearPasswordResetSession, hasPasswordResetSession } from "@/lib/portal/password-reset";
 import { normalizePhone, phoneLooksValid, PHONE_REQUIRED_MESSAGE } from "@/lib/portal/phone";
 import { careerRecentlySent, CAREER_WAIT_MS, markCareerSent } from "@/lib/portal/career-limit";
+import { markPreorderSent, PREORDER_WAIT_MS, preorderRecentlySent } from "@/lib/portal/preorder-limit";
+import { isGloveSize, PREORDER_PRODUCT } from "@/lib/shop/preorder";
 import { Prisma } from "@prisma/client";
 import { safeReturnPath } from "@/lib/portal/paths";
 import { isOwnerRole, isParentRole, isStaffRole } from "@/lib/portal/roles";
@@ -96,6 +98,11 @@ function refreshProfiles() {
 function refreshCareers() {
   revalidatePath("/portal/coach/careers");
   revalidatePath("/careers");
+}
+
+function refreshPreOrders() {
+  revalidatePath("/portal/coach/pre-orders");
+  revalidatePath("/shop");
 }
 
 function refreshTestimonials() {
@@ -963,6 +970,59 @@ export async function deleteCareerSubmissionAction(formData: FormData): Promise<
   const result = await prisma.careerSubmission.deleteMany({ where: { id } });
   if (result.count === 0) return fail("That application is already gone.");
   refreshCareers();
+  return ok();
+}
+
+export async function submitPreOrderAction(formData: FormData): Promise<ActionResult> {
+  const name = String(formData.get("name") || "").trim();
+  const email = String(formData.get("email") || "")
+    .trim()
+    .toLowerCase();
+  const phone = normalizePhone(String(formData.get("phone") || ""));
+  const gloveSize = String(formData.get("gloveSize") || "").trim();
+  const productSlug = String(formData.get("productSlug") || "").trim();
+
+  if (!name || !email || !phone || !gloveSize) {
+    return fail("Name, email, phone, and glove size are required.");
+  }
+  if (name.length > 80) return fail("Keep the name under 80 characters.");
+  if (!email.includes("@") || email.length > 120) return fail("Enter a valid email.");
+  if (!phoneLooksValid(phone)) return fail(PHONE_REQUIRED_MESSAGE);
+  if (!isGloveSize(gloveSize)) return fail("Pick a glove size.");
+  if (productSlug !== PREORDER_PRODUCT.slug) return fail("That pre-order is no longer open.");
+  if (await preorderRecentlySent()) {
+    return fail("You already sent a pre-order in the last 30 minutes. Try again later.");
+  }
+  const recent = await prisma.preOrder.findFirst({
+    where: { email, createdAt: { gte: new Date(Date.now() - PREORDER_WAIT_MS) } },
+    select: { id: true },
+  });
+  if (recent) {
+    return fail("You already sent a pre-order in the last 30 minutes. Try again later.");
+  }
+
+  await prisma.preOrder.create({
+    data: {
+      productSlug: PREORDER_PRODUCT.slug,
+      productName: PREORDER_PRODUCT.title,
+      name,
+      email,
+      phone,
+      gloveSize,
+    },
+  });
+  await markPreorderSent();
+  refreshPreOrders();
+  return ok();
+}
+
+export async function deletePreOrderAction(formData: FormData): Promise<ActionResult> {
+  await requireCoach();
+  const id = String(formData.get("preOrderId") || "");
+  if (!id) return fail("That pre-order is already gone.");
+  const result = await prisma.preOrder.deleteMany({ where: { id } });
+  if (result.count === 0) return fail("That pre-order is already gone.");
+  refreshPreOrders();
   return ok();
 }
 

@@ -3,6 +3,7 @@ import { ShoppingBag } from "lucide-react";
 import PageHero from "@/components/ui/PageHero";
 import SectionHeading from "@/components/ui/SectionHeading";
 import CTASection from "@/components/home/CTASection";
+import PreorderBanner from "@/components/shop/PreorderBanner";
 import ProductGrid from "@/components/shop/ProductGrid";
 import { getShopifyProducts } from "@/lib/shopify";
 
@@ -27,6 +28,9 @@ export default async function ShopPage() {
 
       <section className="bg-bone py-20 sm:py-28">
         <div className="mx-auto max-w-7xl px-6">
+          <div className="mb-12">
+            <PreorderBanner />
+          </div>
           <SectionHeading
             align="left"
             eyebrow="Catalog"
