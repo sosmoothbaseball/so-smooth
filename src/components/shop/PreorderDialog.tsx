@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import PreorderForm from "@/components/shop/PreorderForm";
-import { PREORDER_PRODUCT } from "@/lib/shop/preorder";
+import { GLOVE_SIZES, PREORDER_PRODUCT } from "@/lib/shop/preorder";
 import { cn } from "@/lib/utils";
 
 export default function PreorderDialog({ onClose }: { onClose: () => void }) {
@@ -124,17 +124,17 @@ export default function PreorderDialog({ onClose }: { onClose: () => void }) {
             )}
           </div>
 
-          <p className="mt-8 max-w-md text-sm leading-relaxed text-ink/65">
-            {PREORDER_PRODUCT.description}
-          </p>
-          <ul className="mt-5 flex flex-col gap-2 text-sm text-ink/70">
-            {PREORDER_PRODUCT.points.map((point) => (
-              <li key={point} className="flex gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-green-600" />
-                <span>{point}</span>
-              </li>
+          <div className="mt-8 flex max-w-xl flex-col gap-4 text-sm leading-relaxed text-ink/65">
+            {PREORDER_PRODUCT.body.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
             ))}
-          </ul>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink/55">
+                Sizes Available
+              </p>
+              <p className="mt-2 text-ink/70">{GLOVE_SIZES.join("  ·  ")}</p>
+            </div>
+          </div>
           <div className="mt-8 max-w-md">
             <PreorderForm />
           </div>

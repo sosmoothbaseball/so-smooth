@@ -1,15 +1,4 @@
-export const GLOVE_SIZES = [
-  '10"',
-  '11"',
-  '11.25"',
-  '11.5"',
-  '11.75"',
-  '12"',
-  '12.25"',
-  '12.5"',
-  '12.75"',
-  '13"',
-] as const;
+export const GLOVE_SIZES = ['9.5"', '11.25"', '11.5"', '11.75"'] as const;
 
 export type GloveSize = (typeof GLOVE_SIZES)[number];
 
@@ -17,25 +6,23 @@ export const PREORDER_PRODUCT = {
   slug: "so-smooth-glove",
   title: "So Smooth Glove",
   eyebrow: "Join the List",
-  bannerLine: "Join the pre-order list. Cream or black.",
-  description:
-    "The So Smooth Glove in cream or black, with green lace, gold stitch, and the interlocking SS. Sign up with your size to get on the list.",
-  points: [
-    "Two colorways: cream and black",
-    "Sized for 10U through 14U travel players",
+  bannerLine: "Join the pre-order list. Tan or black.",
+  body: [
+    "Introducing the SS1 — built with top-of-the-line Kip Leather and made for Smooth hands.",
+    "From the leather to the feel, every detail is designed to help you take your game to the next level. This is just the beginning of the So Smooth Baseball glove lineup, and we’re excited to bring you our first collection!",
   ],
   images: [
     {
       src: "/shop/so-smooth-glove-palm.jpg",
-      alt: "Cream and black So Smooth gloves, palm view",
+      alt: "Tan and black So Smooth gloves, palm view",
     },
     {
       src: "/shop/so-smooth-glove-pocket.jpg",
-      alt: "Cream and black So Smooth gloves, pocket view",
+      alt: "Tan and black So Smooth gloves, pocket view",
     },
     {
       src: "/shop/so-smooth-glove-back.jpg",
-      alt: "Cream and black So Smooth gloves, back view",
+      alt: "Tan and black So Smooth gloves, back view",
     },
   ],
 } as const;
