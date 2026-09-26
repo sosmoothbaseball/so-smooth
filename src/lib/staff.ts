@@ -6,6 +6,8 @@ export type StaffCoach = {
   photo?: string;
   photoPosition?: string;
   photoFit?: "cover" | "contain";
+  /** CSS aspect-ratio when the photo isn't square (e.g. "1024 / 573") */
+  photoAspect?: string;
   goal?: string;
   experience?: string[];
   honors?: string[];
@@ -46,6 +48,7 @@ export const STAFF_COACHES: StaffCoach[] = [
     initials: "RB",
     photo: "/staff/roberto-bueno.jpg",
     photoFit: "contain",
+    photoAspect: "1024 / 573",
     goal: "My goal is to develop more than just baseball players. I want to help young athletes become responsible, disciplined, confident, and hardworking individuals. I push every player to be the best version of themselves, both on and off the field, while preparing them for the demands of high school, college, and life.",
     experience: [
       "6+ years of travel baseball coaching experience",

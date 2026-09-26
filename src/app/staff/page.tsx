@@ -27,7 +27,10 @@ function CoachCard({ coach }: { coach: StaffCoach }) {
     >
       <div className="relative bg-green-800">
         {coach.photo ? (
-          <div className="relative aspect-square overflow-hidden bg-green-950">
+          <div
+            className={`relative overflow-hidden bg-green-950 ${coach.photoAspect ? "" : "aspect-square"}`}
+            style={coach.photoAspect ? { aspectRatio: coach.photoAspect } : undefined}
+          >
             <Image
               src={coach.photo}
               alt={coach.name}
