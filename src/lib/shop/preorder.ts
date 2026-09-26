@@ -4,6 +4,11 @@ export const GLOVE_COLORS = ["Tan", "Black"] as const;
 export type GloveSize = (typeof GLOVE_SIZES)[number];
 export type GloveColor = (typeof GLOVE_COLORS)[number];
 
+/** 9.5" trainer vs standard game sizes */
+export const GLOVE_TRAINER_SIZE: GloveSize = '9.5"';
+export const GLOVE_PRICE_TRAINER = 200;
+export const GLOVE_PRICE_STANDARD = 275;
+
 export const PREORDER_PRODUCT = {
   slug: "so-smooth-glove",
   title: "So Smooth Glove",
@@ -28,6 +33,14 @@ export const PREORDER_PRODUCT = {
     },
   ],
 } as const;
+
+export function glovePriceForSize(size: GloveSize): number {
+  return size === GLOVE_TRAINER_SIZE ? GLOVE_PRICE_TRAINER : GLOVE_PRICE_STANDARD;
+}
+
+export function formatGlovePrice(centsOrDollars: number): string {
+  return `$${centsOrDollars}`;
+}
 
 export function isGloveSize(value: string): value is GloveSize {
   return (GLOVE_SIZES as readonly string[]).includes(value);

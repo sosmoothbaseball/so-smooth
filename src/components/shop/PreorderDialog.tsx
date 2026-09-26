@@ -5,7 +5,14 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import PreorderForm from "@/components/shop/PreorderForm";
-import { GLOVE_SIZES, PREORDER_PRODUCT } from "@/lib/shop/preorder";
+import {
+  formatGlovePrice,
+  GLOVE_PRICE_STANDARD,
+  GLOVE_PRICE_TRAINER,
+  GLOVE_SIZES,
+  GLOVE_TRAINER_SIZE,
+  PREORDER_PRODUCT,
+} from "@/lib/shop/preorder";
 import { cn } from "@/lib/utils";
 
 export default function PreorderDialog({ onClose }: { onClose: () => void }) {
@@ -130,9 +137,17 @@ export default function PreorderDialog({ onClose }: { onClose: () => void }) {
             ))}
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink/55">
-                Sizes Available
+                Sizes & Pricing
               </p>
-              <p className="mt-2 text-ink/70">{GLOVE_SIZES.join("  ·  ")}</p>
+              <ul className="mt-3 flex flex-col gap-2 text-ink/70">
+                <li>
+                  {GLOVE_TRAINER_SIZE} trainer — {formatGlovePrice(GLOVE_PRICE_TRAINER)}
+                </li>
+                <li>
+                  {GLOVE_SIZES.filter((size) => size !== GLOVE_TRAINER_SIZE).join("  ·  ")} —{" "}
+                  {formatGlovePrice(GLOVE_PRICE_STANDARD)}
+                </li>
+              </ul>
             </div>
           </div>
           <div className="mt-8 max-w-md">

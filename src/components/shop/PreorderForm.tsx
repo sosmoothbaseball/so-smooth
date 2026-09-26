@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { submitPreOrderAction } from "@/lib/portal/actions";
-import { GLOVE_COLORS, GLOVE_SIZES, PREORDER_PRODUCT } from "@/lib/shop/preorder";
+import {
+  formatGlovePrice,
+  GLOVE_COLORS,
+  GLOVE_SIZES,
+  glovePriceForSize,
+  PREORDER_PRODUCT,
+} from "@/lib/shop/preorder";
 import ActionForm from "@/components/portal/ActionForm";
 import Button from "@/components/ui/Button";
 import { SelectField, TextField } from "@/components/ui/FormField";
@@ -52,7 +58,7 @@ export default function PreorderForm() {
         </option>
         {GLOVE_SIZES.map((size) => (
           <option key={size} value={size}>
-            {size}
+            {size} — {formatGlovePrice(glovePriceForSize(size))}
           </option>
         ))}
       </SelectField>
