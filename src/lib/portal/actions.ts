@@ -13,6 +13,7 @@ import {
   requireParent,
 } from "@/lib/portal/auth";
 import { now } from "@/lib/portal/time";
+import { parseDateTimeLocal } from "@/lib/portal/dates";
 import { parseLessonMinutes, parseTimeToMinutes } from "@/lib/portal/hours";
 import {
   clearUnbookedLessonSlots,
@@ -67,8 +68,7 @@ function ok(): ActionResult {
 }
 
 function parseDate(value: FormDataEntryValue | null) {
-  const date = new Date(String(value || ""));
-  return Number.isNaN(date.getTime()) ? null : date;
+  return parseDateTimeLocal(value);
 }
 
 function refreshLessons() {

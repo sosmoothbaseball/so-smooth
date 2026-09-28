@@ -1,4 +1,5 @@
 import { dayKey } from "@/lib/lessons";
+import { zonedLocalDate } from "@/lib/portal/dates";
 
 export type CalendarMark = {
   id: string;
@@ -119,12 +120,13 @@ export function eventsOnDay(events: CalendarMark[], key: string) {
 
 export function dayAtNoon(key: string) {
   const [year, month, day] = key.split("-").map(Number);
-  return new Date(year, month - 1, day, 8, 0, 0);
+  return zonedLocalDate(year, month, day, 8 * 60);
 }
 
 export function defaultRangeForDay(key: string) {
-  const start = dayAtNoon(key);
-  const end = new Date(start);
-  end.setHours(18, 0, 0, 0);
-  return { start, end };
+  const [year, month, day] = key.split("-").map(Number);
+  return {
+    start: zonedLocalDate(year, month, day, 8 * 60),
+    end: zonedLocalDate(year, month, day, 18 * 60),
+  };
 }

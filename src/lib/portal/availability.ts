@@ -2,56 +2,15 @@ import { prisma } from "@/lib/portal/prisma";
 import { parseLessonMinutes } from "@/lib/portal/hours";
 import { lessonBoardWindow, now } from "@/lib/portal/time";
 import { STAFF_ROLES } from "@/lib/portal/roles";
+import { pacificParts, zonedLocalDate } from "@/lib/portal/dates";
 
 export { WEEKDAYS, minutesToTime, parseLessonMinutes, parseTimeToMinutes } from "@/lib/portal/hours";
-
-const ZONE = "America/Los_Angeles";
-const WEEKDAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
 type WeeklyRule = {
   weekday: number;
   startMinutes: number;
   endMinutes: number;
 };
-
-function partsInZone(date: Date) {
-  const map = Object.fromEntries(
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: ZONE,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      weekday: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-      hourCycle: "h23",
-    })
-      .formatToParts(date)
-      .filter((part) => part.type !== "literal")
-      .map((part) => [part.type, part.value]),
-  );
-  return {
-    year: Number(map.year),
-    month: Number(map.month),
-    day: Number(map.day),
-    hour: Number(map.hour),
-    minute: Number(map.minute),
-    weekday: WEEKDAY_SHORT.indexOf(map.weekday as (typeof WEEKDAY_SHORT)[number]),
-  };
-}
-
-export function zonedLocalDate(year: number, month: number, day: number, minutes: number) {
-  const hour = Math.floor(minutes / 60);
-  const minute = minutes % 60;
-  const wanted = Date.UTC(year, month - 1, day, hour, minute);
-  let date = new Date(Date.UTC(year, month - 1, day, hour + 8, minute));
-  for (let i = 0; i < 3; i += 1) {
-    const shown = partsInZone(date);
-    const got = Date.UTC(shown.year, shown.month - 1, shown.day, shown.hour, shown.minute);
-    date = new Date(date.getTime() + (wanted - got));
-  }
-  return date;
-}
 
 function addCivilDays(year: number, month: number, day: number, add: number) {
   const date = new Date(Date.UTC(year, month - 1, day + add));
@@ -65,7 +24,7 @@ function addCivilDays(year: number, month: number, day: number, add: number) {
 
 export function generateWeeklySlots(rules: WeeklyRule[], durationMinutes: number, from = now()) {
   const { end } = lessonBoardWindow();
-  const start = partsInZone(from);
+  const start = pacificParts(from);
   const byWeekday = new Map(rules.map((rule) => [rule.weekday, rule]));
   const slots: { startsAt: Date; endsAt: Date }[] = [];
 

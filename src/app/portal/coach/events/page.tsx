@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireCoach } from "@/lib/portal/auth";
 import { getPastEventPage, getUpcomingEvents } from "@/lib/portal/queries";
 import { addUpcomingEventAction } from "@/lib/portal/actions";
-import { toDateTimeLocal } from "@/lib/portal/dates";
+import { pacificAt, toDateTimeLocal } from "@/lib/portal/dates";
 import PortalShell from "@/components/portal/PortalShell";
 import PortalPanel from "@/components/portal/PortalPanel";
 import CoachEventCard, { type CoachEventCardData } from "@/components/portal/CoachEventCard";
@@ -59,11 +59,8 @@ export default async function CoachEventsPage({
     getUpcomingEvents(),
     getPastEventPage(Number(page || "1")),
   ]);
-  const start = new Date();
-  start.setDate(start.getDate() + 12);
-  start.setHours(9, 0, 0, 0);
-  const end = new Date(start);
-  end.setHours(12, 0, 0, 0);
+  const start = pacificAt(12, 9 * 60);
+  const end = pacificAt(12, 12 * 60);
 
   return (
     <PortalShell user={user} pathname="/portal/coach/events">
